@@ -1,6 +1,12 @@
 import type { DownloadType, ProgressType } from "./download-enums";
 import type { Prettify } from "./prettify";
-import type { CodecPreferences, SabrConfig, SubtitleTrack, VideoMetadata } from "./settings-types";
+import type {
+  CodecPreferences,
+  SabrConfig,
+  SubtitleTrack,
+  VideoMetadata,
+  VideoReencodeSpec
+} from "./settings-types";
 import type { AdaptiveFormatItem, CaptionTrack, PlayerResponse, TranslationLanguage } from "./youtube";
 
 export type DownloadProgressEntry = Prettify<{
@@ -39,6 +45,7 @@ export type DownloadRequest = Prettify<{
   poToken?: string;
   sabrUrl?: string;
   videoFormat?: AdaptiveFormatItem | null;
+  videoReencode?: VideoReencodeSpec;
   audioFormat?: AdaptiveFormatItem | null;
   additionalAudioFormats?: AdaptiveFormatItem[];
   primaryAudioLabel?: string;
@@ -62,6 +69,7 @@ export type StreamData = Prettify<{
   videoFile?: File;
   audioData: Uint8Array | null;
   videoMimeType: string;
+  videoReencode?: VideoReencodeSpec;
   audioMimeType: string;
   primaryAudioLabel?: string;
   primaryAudioLanguageCode?: string;

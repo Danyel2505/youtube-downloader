@@ -1,16 +1,23 @@
+import { cancelMuxJobs as cancelQueuedMuxJobs } from "./mux-queue";
 import type { FFmpegCoreBuild } from "./mux-worker-types";
 import { WorkerMessageType } from "./mux-worker-types";
-import { getPendingJobReject, setWorkerPort } from "./worker-jobs";
+import { getPendingJobReject, sendCancelToWorker, setWorkerPort } from "./worker-jobs";
 import { createHostWorkerPort } from "./worker-port-host";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
 
-export { cancelMuxJobs } from "./mux-queue";
 export {
   runEmbedMetadata,
   runMuxVideoAudio,
   runTranscodeAudio,
   runTranscodeFile
 } from "./worker-jobs";
+
+// Queued jobs are dropped here; the one the worker is running (a H.265 re-encode can take minutes) stops
+// at its next checkpoint
+export function cancelMuxJobs(videoIds: string[]) {
+  cancelQueuedMuxJobs(videoIds);
+  sendCancelToWorker(videoIds);
+}
 
 export async function initMuxWorker({ coreBuild, wasmBinary }: {
   coreBuild: FFmpegCoreBuild;

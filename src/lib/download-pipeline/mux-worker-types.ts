@@ -1,4 +1,4 @@
-import type { Prettify, VideoMetadata } from "@/types";
+import type { Prettify, VideoMetadata, VideoReencodeSpec } from "@/types";
 
 export enum WorkerMessageType {
   Init = "init",
@@ -7,6 +7,7 @@ export enum WorkerMessageType {
   EmbedMetadata = "embedMetadata",
   TranscodeAudio = "transcodeAudio",
   TranscodeFile = "transcodeFile",
+  CancelMux = "cancelMux",
   Result = "result",
   ResultFile = "resultFile",
   Error = "error",
@@ -40,6 +41,7 @@ export type MuxVideoAudioJob = Prettify<BaseWorkerJob & {
     languageCode: string;
   }[];
   videoMimeType: string;
+  videoReencode?: VideoReencodeSpec;
   audioMimeType: string;
   defaultAudioTrackIndex: number;
 }>;

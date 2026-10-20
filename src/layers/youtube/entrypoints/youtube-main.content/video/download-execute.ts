@@ -3,10 +3,12 @@ import { buildEnrichedRequest, fetchCaptionWebVttData } from "./download-request
 import { getPageRoute, getRouteVideoId, PageRoute } from "./page-route";
 import { generatePoTokenIfNeeded, videoDataCache } from "./video-data";
 import { crossWorldMessenger, CrossWorldMessage } from "@/lib/messaging/cross-world-messenger";
+import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
 import { getCompatibleFilename, getFileExtension, splitFilenameAndExtension } from "@/lib/utils/filename";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { CAPTION_ESTIMATED_BYTES } from "@/lib/youtube/download-progress";
+import { resolveReencodeSource } from "@/lib/youtube/reencode-formats";
 import { isVideoDataExpired } from "@/lib/youtube/video-helpers";
 import type { AdaptiveFormatItem, DownloadRequest, Prettify, VideoData } from "@/types";
 
@@ -82,6 +84,7 @@ type ResolveAndDispatchParams = Prettify<{
 }>;
 export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDispatchParams) {
   const { type, videoId } = params;
+  await initHevcSupport();
 
   const cachedVideoData = videoDataCache.get(videoId);
   const route = getPageRoute();
@@ -111,15 +114,15 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
     videoData: cachedVideoData
   });
 
-  const {
-    videoFormat,
-    audioFormat,
-    extraAudioFormats,
-    captionTracks: orderedCaptionTracks
-  } = resolveDownloadPlan({
+  const plan = resolveDownloadPlan({
     videoData: cachedVideoData,
     params,
     targetExtension: getFileExtension(params.filenameOutput).toLowerCase()
+  });
+  const { audioFormat, extraAudioFormats, captionTracks: orderedCaptionTracks } = plan;
+  const { videoFormat, videoReencode } = resolveReencodeSource({
+    videoData: cachedVideoData,
+    plannedFormat: plan.videoFormat
   });
   const captionExpectedBytesTotal = orderedCaptionTracks.length * CAPTION_ESTIMATED_BYTES;
   const totalExpectedBytes = readContentLength(videoFormat)
@@ -173,6 +176,7 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
       extraAudioFormats,
       orderedCaptionTracks,
       sourceCaptionTracks: cachedVideoData.captionTracks,
+      videoReencode,
       captionVttDataPromise,
       resolvedVideoUrl,
       resolvedAudioUrl,

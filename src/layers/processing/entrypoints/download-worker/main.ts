@@ -166,6 +166,7 @@ function buildStreamEnd({
     videoId,
     filenameOutput,
     videoMimeType,
+    videoReencode: request.videoReencode,
     audioMimeType,
     audioTrackLabels: [primaryAudioLabel ?? "", ...additionalAudioTrackLabels],
     audioTrackLanguages: [primaryAudioLanguageCode ?? "", ...additionalAudioLanguageCodes],

@@ -389,7 +389,7 @@ export function predictOutputSize({
   if (isVideoOnly) {
     return videoFormat ? {
       bytes: contentLength(videoFormat),
-      isApproximate: false
+      isApproximate: !!videoFormat.reencode
     } : null;
   }
 
@@ -418,6 +418,6 @@ export function predictOutputSize({
   });
   return {
     bytes: Math.round(muxed.bytes),
-    isApproximate: muxed.isApproximate || !inputs
+    isApproximate: muxed.isApproximate || !inputs || !!videoFormat.reencode
   };
 }

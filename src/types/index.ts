@@ -39,7 +39,8 @@ export {
   PlaylistOutputMode,
   ProgressType,
   VideoCodecPreference,
-  VideoQualityMode
+  VideoQualityMode,
+  VideoReencodeCodec
 } from "./download-enums";
 
 export {
@@ -59,6 +60,7 @@ export type {
   SabrConfig,
   SubtitleTrack,
   VideoMetadata,
+  VideoReencodeSpec,
   VideoTabParams
 } from "./settings-types";
 

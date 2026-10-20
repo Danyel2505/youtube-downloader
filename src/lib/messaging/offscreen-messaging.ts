@@ -4,7 +4,8 @@ import type {
   DownloadType,
   Prettify,
   SabrConfig,
-  VideoMetadata
+  VideoMetadata,
+  VideoReencodeSpec
 } from "@/types";
 
 export const OffscreenMessageType = {
@@ -35,6 +36,7 @@ export interface OffscreenProtocolMap {
     videoId: string;
     filenameOutput: string;
     videoMimeType: string;
+    videoReencode?: VideoReencodeSpec;
     audioMimeType: string;
     audioTrackLabels: string[];
     audioTrackLanguages?: string[];

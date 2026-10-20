@@ -9,6 +9,7 @@ export type ResolvedDownloadData = Prettify<{
   poToken: string | null;
   sabrUrl: string | null;
   videoFormat: AdaptiveFormatItem | null;
+  videoReencode: DownloadRequest["videoReencode"];
   audioFormat: AdaptiveFormatItem | null;
   extraAudioFormats: AdaptiveFormatItem[];
   orderedCaptionTracks: CaptionTrack[];
@@ -95,7 +96,7 @@ export async function buildEnrichedRequest({ params, resolved }: BuildEnrichedRe
     playlistId, playlistTitle, playlistTotalCount
   } = params;
   const {
-    sabrConfig, poToken, sabrUrl, videoFormat, audioFormat, extraAudioFormats,
+    sabrConfig, poToken, sabrUrl, videoFormat, videoReencode, audioFormat, extraAudioFormats,
     orderedCaptionTracks, sourceCaptionTracks, captionVttDataPromise,
     resolvedVideoUrl, resolvedAudioUrl, resolvedExtraAudioUrls, progressiveUrl
   } = resolved;
@@ -118,6 +119,7 @@ export async function buildEnrichedRequest({ params, resolved }: BuildEnrichedRe
     poToken: poToken ?? undefined,
     sabrUrl: sabrUrl ?? undefined,
     videoFormat,
+    videoReencode,
     audioFormat,
     additionalAudioFormats: extraAudioFormats,
     primaryAudioLabel: audioFormat?.audioTrack?.displayName

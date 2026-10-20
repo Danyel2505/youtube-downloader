@@ -20,7 +20,7 @@ type ProcessVideoAudioParams = Prettify<{
 }>;
 export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudioParams) {
   const {
-    videoId, filenameOutput, videoMimeType, audioMimeType, tabId,
+    videoId, filenameOutput, videoMimeType, videoReencode, audioMimeType, tabId,
     additionalAudioStreams, subtitleTracks, primaryAudioLanguageCode, defaultAudioTrackIndex
   } = item;
 
@@ -71,6 +71,7 @@ export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudio
         audioTracks,
         subtitleTracks: buildSubtitleFiles(subtitleTracks),
         videoMimeType,
+        videoReencode,
         audioMimeType,
         videoId,
         tabId,

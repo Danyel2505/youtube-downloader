@@ -1,3 +1,4 @@
+import { MUX_JOB_CANCELLED_ERROR } from "@/lib/download-pipeline/mux-queue";
 import { WorkerMessageType } from "@/lib/download-pipeline/mux-worker-types";
 import { createWorkerPortReceiver } from "@/lib/download-pipeline/worker-port-receiver";
 import type { WorkerPortReceiver } from "@/lib/download-pipeline/worker-port-receiver";
@@ -14,6 +15,7 @@ type MuxState = Prettify<{
   progressScale: number;
   currentVideoId: string;
   currentTabId: number;
+  cancelledVideoIds: Set<string>;
 }>;
 
 export const state: MuxState = {
@@ -22,7 +24,8 @@ export const state: MuxState = {
   progressOffset: 0,
   progressScale: 1,
   currentVideoId: "",
-  currentTabId: 0
+  currentTabId: 0,
+  cancelledVideoIds: new Set()
 };
 
 export function initFfmpeg(instance: FFmpegCoreModule) {
@@ -51,7 +54,13 @@ export function tryRmdir(path: string) {
   } catch { /* no-op */ }
 }
 
-function reportFFmpegProgress(value: number) {
+export function throwIfMuxCancelled(videoId: string) {
+  if (state.cancelledVideoIds.has(videoId)) {
+    throw new Error(MUX_JOB_CANCELLED_ERROR);
+  }
+}
+
+export function reportFFmpegProgress(value: number) {
   state.portReceiver?.send(WorkerMessageType.Progress, {
     videoId: state.currentVideoId,
     progress: Math.max(0, Math.min(value, 0.99)),

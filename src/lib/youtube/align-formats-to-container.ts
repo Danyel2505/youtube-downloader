@@ -1,4 +1,5 @@
 import { isPremiumFormat } from "./format-display";
+import { appendReencodedVariants } from "./reencode-formats";
 import { alignAudioFormatToExtension, pickBestByBitrate } from "./select-audio-format";
 import {
   getOutputExtension,
@@ -21,7 +22,7 @@ import {
 type ContainerAlignmentVideoData = Prettify<Pick<VideoData, "videoFormats" | "videoFormatVariants" | "audioFormats">>;
 
 export function resolveVideoFormatVariants(videoData: Pick<VideoData, "videoFormats" | "videoFormatVariants">) {
-  return videoData.videoFormatVariants ?? videoData.videoFormats;
+  return appendReencodedVariants(videoData.videoFormatVariants ?? videoData.videoFormats);
 }
 
 // The preferences a hand-picked format satisfies, so alignment keeps exactly that format

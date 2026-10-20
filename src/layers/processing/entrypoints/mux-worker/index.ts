@@ -84,6 +84,11 @@ async function onInitMessage(e: MessageEvent<InitMessage>) {
       handleTranscodeFile(job).catch(error => {
         postError(error instanceof Error ? error.message : String(error));
       });
+    },
+    [WorkerMessageType.CancelMux]({ videoIds }) {
+      for (const videoId of videoIds) {
+        state.cancelledVideoIds.add(videoId);
+      }
     }
   });
 

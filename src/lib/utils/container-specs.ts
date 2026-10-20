@@ -43,6 +43,7 @@ type ContainerSpec = Prettify<{
 }>;
 
 const PREFER_H264 = new Set([CODEC_AVC1]);
+const PREFER_H265 = new Set([CODEC_HVC1, CODEC_HEV1]);
 const PREFER_VP9 = new Set([CODEC_VP9, CODEC_VP09]);
 const PREFER_AAC = new Set([CODEC_MP4A]);
 const PREFER_OPUS = new Set([CODEC_OPUS]);
@@ -179,8 +180,8 @@ export function extractBaseCodec(mimeType: string) {
 
 const VIDEO_CODEC_LABELS: Record<string, string> = {
   [CODEC_AVC1]: "H.264",
-  [CODEC_HVC1]: "HEVC",
-  [CODEC_HEV1]: "HEVC",
+  [CODEC_HVC1]: "H.265",
+  [CODEC_HEV1]: "H.265",
   [CODEC_VP8]: "VP8",
   [CODEC_VP9]: "VP9",
   [CODEC_VP09]: "VP9",
@@ -265,6 +266,11 @@ const VIDEO_CODEC_PREFERENCES: Record<VideoCodecPreference, CodecPreferenceSpec>
     codecs: PREFER_H264,
     label: VIDEO_CODEC_LABELS[CODEC_AVC1]!,
     description: "Plays everywhere, up to 1080p"
+  },
+  [VideoCodecPreference.H265]: {
+    codecs: PREFER_H265,
+    label: VIDEO_CODEC_LABELS[CODEC_HVC1]!,
+    description: "Smaller files, re-encodes on your GPU"
   },
   [VideoCodecPreference.Vp9]: {
     codecs: PREFER_VP9,
@@ -513,6 +519,16 @@ export function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
   }
 
   return videoCodecsFor(containerSpec).has(extractBaseCodec(videoMimeType)) || !!containerSpec.allowNonNativeVideo;
+}
+
+const HVC1_TAGGED_EXTENSIONS = new Set(["mp4", "mov", "m4v"]);
+
+// Apple's players only open HEVC in MP4-family files tagged hvc1, which FFmpeg doesn't write by itself
+export function isHevcTagRequired({ videoMimeType, targetExtension }: {
+  videoMimeType: string;
+  targetExtension: string;
+}) {
+  return PREFER_H265.has(extractBaseCodec(videoMimeType)) && HVC1_TAGGED_EXTENSIONS.has(targetExtension);
 }
 
 export function getOutputExtension({ videoMimeType, audioMimeType, userExtension }: {

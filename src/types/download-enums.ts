@@ -10,11 +10,18 @@ export type DownloadType = (typeof DownloadType)[keyof typeof DownloadType];
 export const VideoCodecPreference = {
   Auto: "auto",
   H264: "h264",
+  H265: "h265",
   Vp9: "vp9",
   Av1: "av1"
 } as const;
 
 export type VideoCodecPreference = (typeof VideoCodecPreference)[keyof typeof VideoCodecPreference];
+
+export const VideoReencodeCodec = {
+  Hevc: "hevc"
+} as const;
+
+export type VideoReencodeCodec = (typeof VideoReencodeCodec)[keyof typeof VideoReencodeCodec];
 
 export const AudioCodecPreference = {
   Auto: "auto",

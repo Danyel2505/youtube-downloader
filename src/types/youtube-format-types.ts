@@ -1,4 +1,5 @@
 import type { Prettify } from "./prettify";
+import type { VideoReencodeSpec } from "./settings-types";
 import type { VideoQuality, QualityLabel, AudioQuality } from "./youtube-format-enums";
 
 export type MediaItem = Prettify<{
@@ -84,6 +85,7 @@ export type AdaptiveFormatItem = Prettify<MediaItem & {
   fairPlayKeyUri?: string;
   distinctParams?: string;
   xtags?: string;
+  reencode?: VideoReencodeSpec & { sourceItag: number };
 }>;
 
 export type TranslationLanguage = Prettify<{

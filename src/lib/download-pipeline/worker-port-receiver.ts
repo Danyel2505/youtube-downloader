@@ -36,6 +36,9 @@ export function createWorkerPortReceiver(port: MessagePort) {
       case WorkerMessageType.TranscodeFile:
         commandHandlers[WorkerMessageType.TranscodeFile]?.({ job: message.job });
         break;
+      case WorkerMessageType.CancelMux:
+        commandHandlers[WorkerMessageType.CancelMux]?.({ videoIds: message.videoIds });
+        break;
     }
   };
 

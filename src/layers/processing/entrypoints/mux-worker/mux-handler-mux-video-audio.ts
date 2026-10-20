@@ -1,5 +1,6 @@
 import { executeMuxPhases, tryCheckOutput } from "./mux-handler-exec";
 import { cleanupMuxFiles, writeMuxInputFiles } from "./mux-handler-files";
+import { reencodeVideo, REENCODE_PROGRESS_SHARE, removeReencodeFiles } from "./mux-handler-reencode";
 import { postFileResult, state, tryRmdir, tryUnmount } from "./mux-state";
 import { cleanupOpfsOutput, createOpfsOutputFs, createOpfsOutputHandle } from "./opfs-output-fs";
 import type { MuxVideoAudioJob } from "@/lib/download-pipeline/mux-worker-types";
@@ -11,19 +12,22 @@ import {
 } from "@/lib/utils/containers";
 
 const WORKERFS_MOUNT_SUFFIX = "-opfs-in";
+const REENCODED_MOUNT_SUFFIX = "-reencoded-in";
 const OPFS_OUT_SUFFIX = "-opfs-out";
 const MKV_EXTENSION = "mkv";
 const VIDEO_TEMP_SUFFIX = "video";
 
 export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
   const {
-    videoData, videoFile, audioTracks, subtitleTracks,
-    videoMimeType, audioMimeType, videoId, tabId,
+    videoData, videoFile, audioTracks, subtitleTracks, videoReencode,
+    videoMimeType: sourceVideoMimeType, audioMimeType, videoId, tabId,
     defaultAudioTrackIndex, filenameOutput
   } = job;
   state.currentVideoId = videoId;
   state.currentTabId = tabId;
+  state.cancelledVideoIds.delete(videoId);
 
+  const videoMimeType = videoReencode?.mimeType ?? sourceVideoMimeType;
   const isMultiTrack = audioTracks.length > 1;
   const filenameBase = filenameOutput.replace(/\.[^.]+$/, "");
   const existingExtension = filenameOutput.split(".").pop() ?? MKV_EXTENSION;
@@ -48,7 +52,7 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
     state.ffmpeg!.FS.mount(state.ffmpeg!.FS.filesystems.WORKERFS, { files: [videoFile] }, workerfsDir);
     videoFilename = `${workerfsDir}/${videoFile.name}`;
   } else {
-    videoFilename = `${videoId}-${VIDEO_TEMP_SUFFIX}.${getVideoTempExtension(videoMimeType)}`;
+    videoFilename = `${videoId}-${VIDEO_TEMP_SUFFIX}.${getVideoTempExtension(sourceVideoMimeType)}`;
   }
 
   state.progressOffset = 0;
@@ -76,11 +80,31 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
   state.ffmpeg!.FS.mount(outputDriver, {}, opfsOutDir);
   const opfsOutputFilename = `${opfsOutDir}/${outputFilename}`;
 
+  const reencodedDir = `/${videoId}${REENCODED_MOUNT_SUFFIX}`;
+  let isReencodedMounted = false;
   let success: boolean | undefined;
   try {
+    let muxVideoFilename = videoFilename;
+    if (videoReencode) {
+      const reencodedFile = await reencodeVideo({
+        videoId,
+        sourceFilename: videoFilename,
+        sourceMimeType: sourceVideoMimeType,
+        spec: videoReencode
+      });
+      state.ffmpeg!.FS.mkdir(reencodedDir);
+      state.ffmpeg!.FS.mount(state.ffmpeg!.FS.filesystems.WORKERFS, { files: [reencodedFile] }, reencodedDir);
+      isReencodedMounted = true;
+      muxVideoFilename = `${reencodedDir}/${reencodedFile.name}`;
+      state.progressOffset = REENCODE_PROGRESS_SHARE;
+      state.progressScale = 1 - REENCODE_PROGRESS_SHARE;
+    }
+
     success = executeMuxPhases({
       params: {
-        videoFilename,
+        videoFilename: muxVideoFilename,
+        videoMimeType,
+        videoFrameRate: videoReencode?.frameRate,
         audioFilenames,
         subtitleFilenames,
         outputFilename: opfsOutputFilename,
@@ -114,12 +138,23 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
       tryUnmount(workerfsDir);
       tryRmdir(workerfsDir);
     }
+
+    if (isReencodedMounted) {
+      tryUnmount(reencodedDir);
+      tryRmdir(reencodedDir);
+    }
+
+    if (videoReencode) {
+      await removeReencodeFiles(videoId);
+    }
+
+    if (!success) {
+      await cleanupOpfsOutput(videoId);
+    }
   }
 
   if (success) {
     const file = await outputHandle.getFile();
     postFileResult(file);
-  } else {
-    await cleanupOpfsOutput(videoId);
   }
 }

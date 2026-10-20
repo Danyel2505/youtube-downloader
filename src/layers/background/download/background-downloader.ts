@@ -351,6 +351,7 @@ async function runFirefoxDirectDownload({ request, tabId, enrichedMetadata }: Ru
       videoId,
       filenameOutput,
       videoMimeType,
+      videoReencode: request.videoReencode,
       audioMimeType,
       audioTrackLabels,
       audioTrackLanguages,

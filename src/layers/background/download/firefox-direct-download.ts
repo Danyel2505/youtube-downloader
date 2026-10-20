@@ -231,6 +231,7 @@ function dispatchStreamEndToOffscreen({ request, enrichedMetadata, tabId }: Disp
       videoId,
       filenameOutput,
       videoMimeType,
+      videoReencode: request.videoReencode,
       audioMimeType,
       audioTrackLabels: [request.primaryAudioLabel ?? ""],
       audioTrackLanguages: [request.primaryAudioLanguageCode ?? ""],

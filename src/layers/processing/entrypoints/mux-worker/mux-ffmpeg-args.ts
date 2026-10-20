@@ -3,6 +3,7 @@ import {
   CONTAINER_SPECS,
   FFMPEG_CODEC_COPY,
   getFileExtension,
+  isHevcTagRequired,
   isVideoNativeForContainer,
   resolveAudioCodec,
   videoContainers
@@ -10,6 +11,8 @@ import {
 import type { Prettify } from "@/types";
 
 const FFMPEG_SUBTITLE_CODEC_WEBVTT = "webvtt";
+const FFMPEG_HEVC_DEMUXER = "hevc";
+const FFMPEG_TAG_HVC1 = "hvc1";
 
 // Pin the demuxer per input so FFmpeg never auto-probes downloaded bytes
 // into an unexpected (and potentially vulnerable) demuxer
@@ -109,6 +112,8 @@ type SubtitleTracks = MuxVideoAudioJob["subtitleTracks"];
 
 export type MuxFfmpegParams = Prettify<{
   videoFilename: string;
+  videoMimeType: string;
+  videoFrameRate?: number;
   audioFilenames: string[];
   subtitleFilenames: string[];
   outputFilename: string;
@@ -154,13 +159,22 @@ function appendTrackMetadata({ ffmpegArgs, params }: AppendTrackMetadataParams) 
   }
 }
 
+// A raw H.265 stream carries no timestamps, so its frame rate comes with the input
+function buildVideoInputArgs({ videoFilename, videoFrameRate }: Pick<MuxFfmpegParams, "videoFilename" | "videoFrameRate">) {
+  if (!videoFrameRate) {
+    return buildInputArgs(videoFilename);
+  }
+
+  return ["-framerate", String(videoFrameRate), "-f", FFMPEG_HEVC_DEMUXER, "-i", videoFilename];
+}
+
 export function buildMuxFfmpegArgs(params: MuxFfmpegParams) {
   const {
-    videoFilename, audioFilenames, subtitleFilenames,
+    videoMimeType, audioFilenames, subtitleFilenames,
     outputFilename, muxFilename, useIntermediateMkv, audioMimeType, targetExtension
   } = params;
 
-  const ffmpegArgs = [...buildInputArgs(videoFilename)];
+  const ffmpegArgs = [...buildVideoInputArgs(params)];
   for (const filename of [...audioFilenames, ...subtitleFilenames]) {
     ffmpegArgs.push(...buildInputArgs(filename));
   }
@@ -181,6 +195,14 @@ export function buildMuxFfmpegArgs(params: MuxFfmpegParams) {
       targetExtension
     })
   );
+
+  const isHvc1TagNeeded = !useIntermediateMkv && isHevcTagRequired({
+    videoMimeType,
+    targetExtension
+  });
+  if (isHvc1TagNeeded) {
+    ffmpegArgs.push("-tag:v", FFMPEG_TAG_HVC1);
+  }
 
   const hasSubtitleFiles = subtitleFilenames.length > 0;
   if (hasSubtitleFiles) {

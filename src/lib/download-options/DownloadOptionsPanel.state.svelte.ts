@@ -19,6 +19,7 @@ import {
 import { resolveActualExtension, resolvePrimaryState, resolveQualityLabel } from "./helpers/panel-state-derived";
 import { syncAudioFromFormat } from "./helpers/player-active-tracks.svelte";
 import type { PanelHost } from "./panel-host";
+import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
 import { CONTENT_OPTIONS, interruptedDownloadStore, statusProgressSignal } from "@/lib/ui/synced-stores.svelte";
 import { getCompatibleFilename, isAudioMimeNativeForContainer, resolveAutoExtension } from "@/lib/utils/containers";
 import { pinAudioCodecPreferences, pinVideoCodecPreferences } from "@/lib/youtube/align-formats-to-container";
@@ -54,6 +55,7 @@ const BYTES_PER_MEGABYTE = BYTES_PER_KILOBYTE * 1024;
 const BYTES_PER_GIGABYTE = BYTES_PER_MEGABYTE * 1024;
 
 export function createPanelState(getVideoData: () => VideoData, host: PanelHost) {
+  void initHevcSupport();
   const store = createDownloadStoreState(getVideoData);
 
   let downloadId = $state<number | null>(null);

@@ -8,7 +8,8 @@ import type {
   PlaylistDownloadMode,
   PlaylistOutputMode,
   VideoCodecPreference,
-  VideoQualityMode
+  VideoQualityMode,
+  VideoReencodeCodec
 } from "./download-enums";
 import type { Prettify } from "./prettify";
 import type { AdaptiveFormatItem } from "./youtube";
@@ -24,6 +25,13 @@ export type SabrConfig = Prettify<{
   clientName: number;
   clientVersion: string;
   formats: AdaptiveFormatItem[];
+}>;
+
+export type VideoReencodeSpec = Prettify<{
+  codec: VideoReencodeCodec;
+  mimeType: string;
+  frameRate: number;
+  bitrate: number;
 }>;
 
 export type SubtitleTrack = Prettify<{

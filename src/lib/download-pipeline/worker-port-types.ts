@@ -7,6 +7,7 @@ export type WorkerCommandMap = {
   [WorkerMessageType.EmbedMetadata]: { job: EmbedMetadataJob };
   [WorkerMessageType.TranscodeAudio]: { job: TranscodeAudioJob };
   [WorkerMessageType.TranscodeFile]: { job: TranscodeFileJob };
+  [WorkerMessageType.CancelMux]: { videoIds: string[] };
 };
 
 export type WorkerDataResponseMap = {

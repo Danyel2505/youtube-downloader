@@ -16,6 +16,10 @@ export function getPendingJobReject() {
   return pendingJobReject;
 }
 
+export function sendCancelToWorker(videoIds: string[]) {
+  workerPort?.send(WorkerMessageType.CancelMux, { videoIds });
+}
+
 type RunWorkerJobParams<T> = {
   send: (port: HostWorkerPort) => void;
   transform: (data: ArrayBuffer | null) => T;

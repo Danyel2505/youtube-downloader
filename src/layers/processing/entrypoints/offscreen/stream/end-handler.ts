@@ -7,7 +7,7 @@ import { AUDIO_EXTRA_STREAM_PREFIX, ProgressType } from "@/types";
 
 export async function handleProcessStreamEnd(data: ProcessStreamEndData) {
   const {
-    videoId, type, filenameOutput, videoMimeType, audioMimeType,
+    videoId, type, filenameOutput, videoMimeType, videoReencode, audioMimeType,
     audioTrackLabels, audioTrackLanguages, defaultAudioTrackIndex, subtitleTracks, tabId,
     playlistId, playlistTitle, playlistTotalCount, quality, sourceUrl
   } = data;
@@ -67,6 +67,7 @@ export async function handleProcessStreamEnd(data: ProcessStreamEndData) {
       })
       : null,
     videoMimeType,
+    videoReencode,
     audioMimeType,
     primaryAudioLabel,
     additionalAudioStreams,
