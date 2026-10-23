@@ -1,9 +1,13 @@
 import { resolveAndDispatch } from "./download-execute";
 import { crossWorldMessenger, CrossWorldMessage } from "@/lib/messaging/cross-world-messenger";
 import { createLogger, LogScope } from "@/lib/utils/logger";
+import { rejectAfter } from "@/lib/utils/timeout";
 import type { DownloadRequest } from "@/types";
 
 const log = createLogger(LogScope.Main);
+
+const DISPATCH_TIMEOUT_MS = 90_000;
+const DISPATCH_TIMEOUT_MESSAGE = "Preparing the download took too long";
 
 const activeDownloads = new Map<string, AbortController>();
 
@@ -41,13 +45,22 @@ export async function startDownload(params: Pick<DownloadRequest,
   activeDownloads.set(params.videoId, abortController);
 
   try {
-    await resolveAndDispatch({
-      params,
-      abortSignal: abortController.signal
+    await rejectAfter({
+      promise: resolveAndDispatch({
+        params,
+        abortSignal: abortController.signal
+      }),
+      milliseconds: DISPATCH_TIMEOUT_MS,
+      message: DISPATCH_TIMEOUT_MESSAGE
     });
   } catch (error) {
-    const isAborted = abortController.signal.aborted;
-    if (isAborted) {
+    const isDispatchTimeout = error instanceof Error && error.message === DISPATCH_TIMEOUT_MESSAGE;
+    if (isDispatchTimeout) {
+      abortController.abort();
+    }
+
+    const isCancelledByUser = abortController.signal.aborted && !isDispatchTimeout;
+    if (isCancelledByUser) {
       return;
     }
 

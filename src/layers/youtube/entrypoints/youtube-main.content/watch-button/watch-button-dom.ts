@@ -1,3 +1,4 @@
+import { allowPageScrollBehindDropdown } from "../dropdown-scroll";
 import { findShortsActionsContainer } from "./watch-button-container";
 import watchButtonStyles from "./watch-button.css?inline";
 import { CHILD_LIST_SUBTREE } from "@/lib/utils/dom";
@@ -137,7 +138,7 @@ export function createDropdownElement({ videoId }: { videoId: string }) {
   elDropdown.verticalAlign = "top";
   elDropdown.noOverlap = true;
   elDropdown.dynamicAlign = true;
-  elDropdown.allowOutsideScroll = false;
+  allowPageScrollBehindDropdown(elDropdown);
   elDropdown.restoreFocusOnClose = false;
 
   return {

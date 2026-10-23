@@ -1,10 +1,13 @@
 import { isOffscreenConnected } from "@/lib/messaging/offscreen-messaging";
+import { rejectAfter } from "@/lib/utils/timeout";
 
 let processorReady: Promise<void> | null = null;
 let ffmpegReadyResolvers: PromiseWithResolvers<void> | null = null;
 
 const OFFSCREEN_URL_PATH = "/offscreen.html";
 const OFFSCREEN_IFRAME_ID = "ytdl-offscreen-iframe";
+const FFMPEG_READY_TIMEOUT_MS = 60_000;
+const FFMPEG_READY_TIMEOUT_MESSAGE = "FFmpeg took too long to start";
 
 export function signalFFmpegReady() {
   ffmpegReadyResolvers?.resolve();
@@ -74,7 +77,15 @@ async function ensureOffscreenDocument() {
     ensureFirefoxOffscreenIframe();
   }
 
-  await ffmpegReady;
+  await rejectAfter({
+    promise: ffmpegReady,
+    milliseconds: FFMPEG_READY_TIMEOUT_MS,
+    message: FFMPEG_READY_TIMEOUT_MESSAGE
+  }).catch((error: unknown) => {
+    ffmpegReadyResolvers = null;
+    processorReady = null;
+    throw error;
+  });
 }
 
 export async function ensureProcessor() {

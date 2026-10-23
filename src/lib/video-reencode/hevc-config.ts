@@ -1,3 +1,4 @@
+import { resolveWithin } from "@/lib/utils/timeout";
 import type { Prettify } from "@/types";
 
 const HEVC_CODEC_PREFIX = "hvc1.1.6.L";
@@ -71,6 +72,7 @@ const PROBE_FRAME_RATE = 30;
 const PROBE_ASPECT_RATIO = 16 / 9;
 const PROBE_BITS_PER_PIXEL = 0.07;
 const EVEN_DIMENSION_STEP = 2;
+const PROBE_TIMEOUT_MS = 2_000;
 
 export type HevcStreamShape = Prettify<{
   width: number;
@@ -131,9 +133,10 @@ function toEvenDimension(value: number) {
   return Math.round(value / EVEN_DIMENSION_STEP) * EVEN_DIMENSION_STEP;
 }
 
-// The tallest 16:9 picture the browser can encode as H.265, 0 when it can't encode it at all
+// The tallest 16:9 picture the browser can encode as H.265, 0 when it can't encode it at all or the
+// browser doesn't answer in time (a stuck GPU process must never hold a download back)
 export async function detectHevcEncodeMaxHeight() {
-  const probes = await Promise.all(
+  const probes = Promise.all(
     PROBE_HEIGHTS.map(async height => {
       const width = toEvenDimension(height * PROBE_ASPECT_RATIO);
       const isSupported = await isHevcEncoderConfigSupported(
@@ -147,5 +150,10 @@ export async function detectHevcEncodeMaxHeight() {
       return isSupported ? height : 0;
     })
   );
-  return Math.max(0, ...probes);
+  const supportedHeights = await resolveWithin({
+    promise: probes,
+    milliseconds: PROBE_TIMEOUT_MS,
+    fallback: [0]
+  });
+  return Math.max(0, ...supportedHeights);
 }

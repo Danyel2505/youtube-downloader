@@ -1,3 +1,4 @@
+import { allowPageScrollBehindDropdown } from "../dropdown-scroll";
 import { registerDropdownFocusHandlers } from "./grid-dropdown-focus";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import type { Prettify, TpYtIronDropdownElement } from "@/types";
@@ -40,7 +41,7 @@ function createGridDropdown({ contentId, positionTargetSelector }: CreateGridDro
   elDropdown.verticalAlign = "top";
   elDropdown.noOverlap = true;
   elDropdown.dynamicAlign = true;
-  elDropdown.allowOutsideScroll = false;
+  allowPageScrollBehindDropdown(elDropdown);
   elDropdown.restoreFocusOnClose = false;
 
   const resizeObserver = new ResizeObserver(() => {
