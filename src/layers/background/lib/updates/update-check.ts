@@ -3,8 +3,8 @@ import { z } from "@/lib/zod";
 
 const UPDATE_CHECK_ALARM = "ytdlUpdateCheck";
 const CHECK_PERIOD_MINUTES = 24 * 60;
-const RELEASES_API = "https://api.github.com/repos/avi12/youtube-downloader/releases?per_page=30";
-const STABLE_TAG_PATTERN = /^v(\d+\.\d+\.\d+)$/;
+const RELEASES_API = "https://api.github.com/repos/avi12/youtube-downloader/releases?per_page=100";
+const EXTENSION_TAG_PATTERN = /^v(\d+(?:\.\d+)*)$/;
 const BADGE_TEXT = "!";
 const BADGE_COLOR = "#cc0000";
 
@@ -16,14 +16,16 @@ const releasesSchema = z.array(
   })
 );
 
-function compareVersions(versionA: string, versionB: string) {
-  return versionA.localeCompare(versionB, undefined, { numeric: true });
+function isNewerVersion(candidate: string, current: string) {
+  return candidate.localeCompare(current, undefined, { numeric: true }) > 0;
 }
 
 function getMajorVersion(version: string) {
   return version.split(".")[0];
 }
 
+// The repo also hosts other builds (e.g. ffmpeg-lite-v*), so only stable vX.Y.Z tags count,
+// and only on the installed major line so a different route is never offered as an update
 async function fetchLatestVersion(currentVersion: string) {
   const response = await fetch(RELEASES_API, {
     headers: {
@@ -39,11 +41,14 @@ async function fetchLatestVersion(currentVersion: string) {
     return null;
   }
 
-  const sameLineVersions = releases.data
+  const versions = releases.data
     .filter(release => !release.draft && !release.prerelease)
-    .flatMap(release => STABLE_TAG_PATTERN.exec(release.tag_name)?.slice(1) ?? [])
+    .flatMap(release => EXTENSION_TAG_PATTERN.exec(release.tag_name)?.[1] ?? [])
     .filter(version => getMajorVersion(version) === getMajorVersion(currentVersion));
-  return sameLineVersions.toSorted(compareVersions).at(-1) ?? null;
+  return versions.reduce<string | null>(
+    (latest, version) => (!latest || isNewerVersion(version, latest) ? version : latest),
+    null
+  );
 }
 
 async function applyAvailableUpdate(availableVersion: string | null) {
@@ -64,7 +69,7 @@ async function checkForUpdate() {
     return;
   }
 
-  await applyAvailableUpdate(compareVersions(latestVersion, currentVersion) > 0 ? latestVersion : null);
+  await applyAvailableUpdate(isNewerVersion(latestVersion, currentVersion) ? latestVersion : null);
 }
 
 async function handleUpdateCheckAlarm({ name }: Browser.alarms.Alarm) {
