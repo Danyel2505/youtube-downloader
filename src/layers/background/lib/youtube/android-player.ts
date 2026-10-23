@@ -27,6 +27,10 @@ export type AndroidStreamingFormat = Prettify<{
   height?: number;
   audioChannels?: number;
   audioSampleRate?: string;
+  audioTrack?: {
+    id: string;
+    audioIsDefault?: boolean;
+  };
 }>;
 
 export type AndroidPlayerResponse = Prettify<{
@@ -116,16 +120,82 @@ function parseContentLength(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+type WantedAudioTrack = Prettify<{
+  itag: number;
+  trackId?: string;
+}>;
+
 type ResolveAndroidUrlsParams = Prettify<{
   videoId: string;
   videoItag?: number;
+  videoMimeType?: string;
+  videoHeight?: number;
   audioItag?: number;
-  extraAudioItags?: number[];
+  audioTrackId?: string;
+  extraAudioTracks?: WantedAudioTrack[];
   customFetch?: FetchFn;
 }>;
 
+const CODEC_FAMILY_PATTERN = /^([^;]+);\s*codecs="?([a-z0-9]+)/i;
+
+function getCodecFamily(mimeType: string) {
+  const [, container = "", codec = ""] = CODEC_FAMILY_PATTERN.exec(mimeType) ?? [];
+  return `${container}|${codec.toLowerCase()}`;
+}
+
+type PickVideoFormatParams = Prettify<{
+  allFormats: AndroidStreamingFormat[];
+  adaptiveFormats: AndroidStreamingFormat[];
+  itag: number;
+  mimeType?: string;
+  height?: number;
+}>;
+
+// The exact itag wins. When the client doesn't offer it, the nearest height of the
+// same container and codec keeps the mux args valid, so no other codec is ever substituted
+function pickVideoFormat({ allFormats, adaptiveFormats, itag, mimeType, height }: PickVideoFormatParams) {
+  const exactMatch = allFormats.find(format => format.itag === itag);
+  if (exactMatch || !mimeType || !height) {
+    return exactMatch;
+  }
+
+  const family = getCodecFamily(mimeType);
+  const sameFamily = adaptiveFormats.filter(
+    format => format.mimeType.startsWith("video/") && format.height && getCodecFamily(format.mimeType) === family
+  );
+  const [nearestNotTaller] = sameFamily
+    .filter(format => format.height! <= height)
+    .toSorted((formatA, formatB) => formatB.height! - formatA.height!);
+  const [nearestTaller] = sameFamily
+    .filter(format => format.height! > height)
+    .toSorted((formatA, formatB) => formatA.height! - formatB.height!);
+  return nearestNotTaller ?? nearestTaller;
+}
+
+type PickAudioFormatParams = Prettify<{
+  allFormats: AndroidStreamingFormat[];
+  itag: number;
+  trackId?: string;
+}>;
+
+// Dubbed tracks share one itag, so the track id tells them apart. Without track data
+// in the response the first format is the only one that can be returned
+function pickAudioFormat({ allFormats, itag, trackId }: PickAudioFormatParams) {
+  const sameItag = allFormats.filter(format => format.itag === itag);
+  const hasTrackData = sameItag.some(format => format.audioTrack);
+  if (!trackId) {
+    return sameItag.find(format => format.audioTrack?.audioIsDefault) ?? sameItag[0];
+  }
+
+  if (!hasTrackData) {
+    return sameItag[0];
+  }
+
+  return sameItag.find(format => format.audioTrack?.id === trackId);
+}
+
 export async function resolveAndroidUrls({
-  videoId, videoItag, audioItag, extraAudioItags, customFetch
+  videoId, videoItag, videoMimeType, videoHeight, audioItag, audioTrackId, extraAudioTracks, customFetch
 }: ResolveAndroidUrlsParams): Promise<ResolvedAndroidUrls> {
   const response = await fetchAndroidPlayerResponse({
     videoId,
@@ -140,13 +210,28 @@ export async function resolveAndroidUrls({
   const progressiveFormats = response.streamingData?.formats ?? [];
   const allFormats = [...adaptiveFormats, ...progressiveFormats];
 
-  const videoMatch = videoItag != null ? allFormats.find(format => format.itag === videoItag) : null;
-  const audioMatch = audioItag != null ? allFormats.find(format => format.itag === audioItag) : null;
-  const extraAudioUrls = (extraAudioItags ?? []).map(itag => {
-    const match = allFormats.find(format => format.itag === itag);
+  const videoMatch = videoItag != null ? pickVideoFormat({
+    allFormats,
+    adaptiveFormats,
+    itag: videoItag,
+    mimeType: videoMimeType,
+    height: videoHeight
+  }) : null;
+  const audioMatch = audioItag != null ? pickAudioFormat({
+    allFormats,
+    itag: audioItag,
+    trackId: audioTrackId
+  }) : null;
+  const extraAudioUrls = (extraAudioTracks ?? []).map(({ itag, trackId }) => {
+    const match = pickAudioFormat({
+      allFormats,
+      itag,
+      trackId
+    });
+    const isDuplicateOfPrimary = !!match && match.url === audioMatch?.url;
     return {
-      url: match?.url ?? null,
-      contentLength: parseContentLength(match?.contentLength)
+      url: isDuplicateOfPrimary ? null : (match?.url ?? null),
+      contentLength: isDuplicateOfPrimary ? 0 : parseContentLength(match?.contentLength)
     };
   });
 

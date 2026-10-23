@@ -141,26 +141,26 @@ async function fetchAndroidVrChunked({
   return iChunk;
 }
 
-type RunFirefoxDirectDownloadParams = Prettify<{
+type RunAndroidVrDownloadParams = Prettify<{
   request: DownloadRequest;
   tabId: number;
   enrichedMetadata: VideoMetadata | null;
 }>;
 
-// Firefox-only download path. Chrome uses the offscreen-iframe SABR pipeline
-// in `download-worker/main.ts`; Firefox can't because YouTube's anti-bot gate
+// Firefox's main download path and Chrome's last network layer before the hidden
+// watch-page iframe. Chrome first tries the offscreen-iframe SABR pipeline in
+// `download-worker/main.ts`; Firefox can't because YouTube's anti-bot gate
 // 403s SABR requests originating from Firefox's TLS fingerprint on Windows
 // (regardless of cookies, PO token, or DNR header rewrites).
 //
 // The bypass mirrors yt-dlp's `android_vr` extractor: hit InnerTube with the
 // ANDROID_VR (Oculus Quest YouTube VR app) client, which returns direct CDN
-// URLs for every adaptive format with no SABR forcing and no per-request range
-// cap. Bytes are then pulled in 10 MB closed-range chunks and streamed to the
-// offscreen iframe for FFmpeg muxing on the shared Chrome+Firefox pipeline.
-async function runFirefoxDirectDownload({ request, tabId, enrichedMetadata }: RunFirefoxDirectDownloadParams) {
+// URLs for every adaptive format with no SABR forcing, no PO token and no
+// per-request range cap. Bytes are then pulled in 10 MB closed-range chunks and
+// streamed to the offscreen iframe for FFmpeg muxing on the shared Chrome+Firefox pipeline.
+async function runAndroidVrDownload({ request, tabId, enrichedMetadata }: RunAndroidVrDownloadParams) {
   const { videoId, type, videoItag, audioItag, filenameOutput } = request;
   const additionalAudioFormats = request.additionalAudioFormats ?? [];
-  const extraAudioItags = additionalAudioFormats.map(format => format.itag);
 
   const abortController = new AbortController();
   activeFirefoxDownloads.set(videoId, abortController);
@@ -180,24 +180,28 @@ async function runFirefoxDirectDownload({ request, tabId, enrichedMetadata }: Ru
   const wantsVideo = !isAudioOnly;
   const wantsAudio = !isVideoOnly;
 
+  const resolveParams = {
+    videoId,
+    videoItag: wantsVideo ? videoItag : undefined,
+    videoMimeType: request.videoFormat?.mimeType,
+    videoHeight: request.videoFormat?.height,
+    audioItag: wantsAudio ? audioItag : undefined,
+    audioTrackId: request.audioFormat?.audioTrack?.id,
+    extraAudioTracks: wantsAudio ? additionalAudioFormats.map(format => ({
+      itag: format.itag,
+      trackId: format.audioTrack?.id
+    })) : undefined
+  };
   let resolved;
   try {
-    resolved = await resolveAndroidUrls({
-      videoId,
-      videoItag: wantsVideo ? videoItag : undefined,
-      audioItag: wantsAudio ? audioItag : undefined,
-      extraAudioItags: wantsAudio ? extraAudioItags : undefined
-    });
+    resolved = await resolveAndroidUrls(resolveParams);
   } catch (bgErr) {
     if (!pageProxyFetch) {
       throw bgErr;
     }
 
     resolved = await resolveAndroidUrls({
-      videoId,
-      videoItag: wantsVideo ? videoItag : undefined,
-      audioItag: wantsAudio ? audioItag : undefined,
-      extraAudioItags: wantsAudio ? extraAudioItags : undefined,
+      ...resolveParams,
       customFetch: pageProxyFetch
     });
   }
@@ -366,6 +370,38 @@ async function runFirefoxDirectDownload({ request, tabId, enrichedMetadata }: Ru
   });
 }
 
+type TryAndroidVrFallbackParams = Prettify<{
+  request: DownloadRequest;
+  tabId: number;
+}>;
+
+// Chrome only: runs after the offscreen worker's SABR and CDN layers both came
+// back empty. Returns false when the ANDROID_VR layer can't serve this video, so
+// the caller moves on to the watch-page iframe
+export async function tryAndroidVrFallback({ request, tabId }: TryAndroidVrFallbackParams) {
+  const { videoId } = request;
+  const isHandledElsewhere = isFirefoxRuntime() || request.isIframeFallback;
+  if (isHandledElsewhere) {
+    return false;
+  }
+
+  try {
+    log.warn("SABR+CDN failed, trying ANDROID_VR direct download for", videoId);
+    await runAndroidVrDownload({
+      request,
+      tabId,
+      enrichedMetadata: (await enrichMetadataFromYouTubeMusic(request.metadata)) ?? null
+    });
+  } catch (error) {
+    log.warn("ANDROID_VR direct download failed, trying iframe fallback:", error);
+    return false;
+  }
+
+  clearIframeAutoRetry(videoId);
+  await clearInterruptedDownload(videoId);
+  return true;
+}
+
 export type { DownloadResult } from "./download-result-types";
 export { dropPendingRetry, reportDownloadFailed };
 
@@ -479,7 +515,7 @@ export async function startBackgroundDownload({ request: originalRequest, tabId 
 
     // Firefox: bypass SABR entirely via the ANDROID_VR path (see `runFirefoxDirectDownload`).
     if (isFirefoxRuntime()) {
-      await runFirefoxDirectDownload({
+      await runAndroidVrDownload({
         request,
         tabId,
         enrichedMetadata: (await enrichedMetadataPromise) ?? null

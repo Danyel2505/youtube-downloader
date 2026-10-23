@@ -4,7 +4,8 @@ import {
   dropPendingRetry,
   handleTerminalFailure,
   reportDownloadFailed,
-  startBackgroundDownload
+  startBackgroundDownload,
+  tryAndroidVrFallback
 } from "../download/background-downloader";
 import { reportVideoUnavailable } from "../download/download-failure-reporter";
 import { tryDirectUrlDownload } from "../download/download-fallback-chain";
@@ -33,8 +34,37 @@ import { mutateStorageItem, statusProgressItem } from "@/lib/storage/storage";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { resolveQualityLabel } from "@/lib/youtube/audio-format-helpers";
 import { ProgressType } from "@/types";
+import type { DownloadRequest } from "@/types";
 
 const log = createLogger(LogScope.Background);
+
+type RunFallbackLayersParams = {
+  videoId: string;
+  tabId: number;
+  request: DownloadRequest;
+  reasons?: string[];
+};
+async function runFallbackLayers({ videoId, tabId, request, reasons = [] }: RunFallbackLayersParams) {
+  const hasReasons = reasons.length > 0;
+  if (hasReasons) {
+    log.warn("Worker layers failed for", videoId, reasons);
+  }
+
+  const isServedByAndroidVr = await tryAndroidVrFallback({
+    request,
+    tabId
+  });
+  if (isServedByAndroidVr) {
+    return;
+  }
+
+  await handleIframeFallback({
+    request,
+    tabId,
+    videoId,
+    onExhausted: handleTerminalFailure
+  });
+}
 
 export function registerDownloadHandlers() {
   initIframeReadyListener();
@@ -242,13 +272,7 @@ export function registerDownloadHandlers() {
   });
 
   onMessage(MessageType.RequestWatchPageFallback, ({ data }) => {
-    const { videoId, tabId, request } = data;
-    handleIframeFallback({
-      request,
-      tabId,
-      videoId,
-      onExhausted: handleTerminalFailure
-    }).catch(() => {});
+    runFallbackLayers(data).catch(() => {});
   });
 
   onMessage(MessageType.WorkerDownloadComplete, async ({ data }) => {

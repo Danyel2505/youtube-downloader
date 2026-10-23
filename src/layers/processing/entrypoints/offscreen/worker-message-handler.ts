@@ -47,6 +47,7 @@ type WorkerNeedsFallbackMessage = Prettify<{
   videoId: string;
   tabId: number;
   request: DownloadRequest;
+  reasons: string[];
 }>;
 type WorkerDiscardStreamsMessage = Prettify<{
   type: typeof WORKER_MESSAGE_DISCARD_STREAMS;
@@ -154,7 +155,8 @@ function handleNeedsFallback(message: WorkerMessage) {
   sendMessage(MessageType.RequestWatchPageFallback, {
     videoId: message.videoId,
     tabId: message.tabId,
-    request: message.request
+    request: message.request,
+    reasons: message.reasons
   }).catch(() => {});
 }
 

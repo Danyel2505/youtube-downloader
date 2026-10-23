@@ -277,6 +277,7 @@ export interface ProtocolMap {
     videoId: string;
     tabId: number;
     request: DownloadRequest;
+    reasons?: string[];
   }): void;
 
   workerDownloadComplete(data: {

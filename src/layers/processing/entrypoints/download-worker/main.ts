@@ -24,6 +24,8 @@ const DEFAULT_AUDIO_MIME_TYPE = "audio/mp4";
 
 const abortController = new AbortController();
 const { signal } = abortController;
+// Why each layer gave up. Sent with the fallback request so the background console shows it
+const failureReasons: string[] = [];
 
 addEventListener("message", e => {
   const isExternalOrigin = e.origin !== location.origin;
@@ -58,7 +60,7 @@ async function trySabrWithStallTimer({ request, tabId }: TrySabrWithStallTimerPa
   const useStreaming = !isAudioOnly;
 
   try {
-    return await downloadViaSabr({
+    const sabrResult = await downloadViaSabr({
       request,
       signal: stallTimer.signal,
       tabId,
@@ -84,12 +86,18 @@ async function trySabrWithStallTimer({ request, tabId }: TrySabrWithStallTimerPa
         })
       })
     });
+    if (!sabrResult) {
+      failureReasons.push("SABR: no config or formats for this request");
+    }
+
+    return sabrResult;
   } catch (error) {
     if (signal.aborted) {
       throw error;
     }
 
     log.warn("SABR failed, trying CDN:", error);
+    failureReasons.push(`SABR: ${String(error)}`);
     return null;
   } finally {
     stallTimer.cleanup();
@@ -255,8 +263,14 @@ async function runDownload({ request, tabId, enrichedMetadata }: RunDownloadPara
         }
 
         log.warn("CDN failed:", error);
+        failureReasons.push(`CDN: ${String(error)}`);
         return null;
       });
+    }
+
+    const isCdnSkipped = needsCdn && !isCdnUrlsPresent;
+    if (isCdnSkipped) {
+      failureReasons.push("CDN: the page resolved no stream URLs");
     }
 
     if (signal.aborted) {
@@ -289,7 +303,8 @@ async function runDownload({ request, tabId, enrichedMetadata }: RunDownloadPara
           type: WORKER_MESSAGE_NEEDS_FALLBACK,
           videoId,
           tabId,
-          request
+          request,
+          reasons: failureReasons
         },
         location.origin
       );
