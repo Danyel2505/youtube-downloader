@@ -80,6 +80,7 @@ export type Options = Prettify<{
   audioTrackLanguageMode: AudioTrackLanguageMode;
   captionLanguageMode: CaptionLanguageMode;
   customLanguage: string;
+  audioLanguages: string[];
   downloadExtras: boolean;
   includeAutoDubbing: boolean;
   includeAiCaptions: boolean;

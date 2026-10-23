@@ -65,6 +65,14 @@ export function normalizeLanguageCode(lang: string) {
   return lang.split("-")[0]!.split(".")[0]!.toLowerCase();
 }
 
+export function isAudioTrackInLanguages({ trackId, languages }: {
+  trackId: string;
+  languages: string[];
+}) {
+  const isAnyLanguageAllowed = languages.length === 0;
+  return isAnyLanguageAllowed || languages.includes(normalizeLanguageCode(trackId));
+}
+
 export function getCurrentVideoAudioLanguage() {
   const elVideo = document.querySelector<HTMLVideoElement>(VIDEO_SELECTOR);
   const tracks = elVideo?.audioTracks;

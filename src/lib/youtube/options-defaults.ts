@@ -43,6 +43,7 @@ export const INITIAL_OPTIONS: Options = {
   audioTrackLanguageMode: AudioTrackLanguageMode.MatchVideo,
   captionLanguageMode: CaptionLanguageMode.SameAsAudio,
   customLanguage: DEFAULT_CUSTOM_LANGUAGE,
+  audioLanguages: [],
   downloadExtras: true,
   includeAutoDubbing: false,
   includeAiCaptions: false

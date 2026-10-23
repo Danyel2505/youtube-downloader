@@ -15,7 +15,7 @@ import { optionsItem } from "@/lib/storage/storage";
 import { CONTENT_OPTIONS } from "@/lib/ui/synced-stores.svelte";
 import { MULTI_TRACK_UNSUPPORTED_EXTENSIONS } from "@/lib/utils/containers";
 import { alignVideoFormatToExtension, resolveVideoFormatVariants } from "@/lib/youtube/align-formats-to-container";
-import { normalizeLanguageCode } from "@/lib/youtube/audio-format-helpers";
+import { isAudioTrackInLanguages, normalizeLanguageCode } from "@/lib/youtube/audio-format-helpers";
 import { AUTO_DUB_TRACK_SUFFIX, buildTranslatedCaptionTrack } from "@/lib/youtube/download-plan";
 import {
   alignAudioFormatToExtension,
@@ -298,7 +298,11 @@ export function createDownloadOptionsState(props: () => DownloadOptionsProps) {
       const trackId = format.audioTrack?.id;
       const isOtherTrack = !!trackId && trackId !== selectedTrackId;
       const isAllowedByDubbingPref = PANEL_OPTIONS.includeAutoDubbing || !trackId?.endsWith(AUTO_DUB_TRACK_SUFFIX);
-      return isOtherTrack && isAllowedByDubbingPref;
+      const isAllowedByLanguage = !!trackId && isAudioTrackInLanguages({
+        trackId,
+        languages: CONTENT_OPTIONS.audioLanguages
+      });
+      return isOtherTrack && isAllowedByDubbingPref && isAllowedByLanguage;
     });
 
     return [selected, ...extras];

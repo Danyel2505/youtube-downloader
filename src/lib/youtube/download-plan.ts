@@ -1,4 +1,5 @@
 import { alignFormatsToContainer, resolveVideoFormatVariants } from "./align-formats-to-container";
+import { isAudioTrackInLanguages } from "./audio-format-helpers";
 import { orderCaptionsByPreference, resolveCaptionLanguageMode } from "./caption-helpers";
 import { CONTENT_OPTIONS } from "@/lib/ui/synced-stores.svelte";
 import { isAudioCodecPreferredForContainer } from "@/lib/utils/containers";
@@ -132,7 +133,11 @@ function getExtraAudioFormats({
     }
 
     const isAutoDubTrack = !includeAutoDubbing && trackId.endsWith(AUTO_DUB_TRACK_SUFFIX);
-    if (isAutoDubTrack) {
+    const isLanguageExcluded = !isAudioTrackInLanguages({
+      trackId,
+      languages: CONTENT_OPTIONS.audioLanguages
+    });
+    if (isAutoDubTrack || isLanguageExcluded) {
       continue;
     }
 

@@ -1,5 +1,7 @@
 import { findAudioFormatForPlayerTrack } from "./panel-audio-actions";
 import { PLAYER_ACTIVE_AUDIO } from "./player-active-tracks.svelte";
+import { isAudioTrackInLanguages } from "@/lib/youtube/audio-format-helpers";
+import { AUTO_DUB_TRACK_SUFFIX } from "@/lib/youtube/download-plan";
 import {
   normalizeLanguageCode,
   selectPreferredAudioFormat,
@@ -49,7 +51,7 @@ export function resolveInitialAudioFormat({ options, videoData }: OptionsVideoDa
     }
   }
 
-  return selectPreferredAudioFormat({
+  const preferred = selectPreferredAudioFormat({
     audioFormats: videoData.audioFormats,
     videoMimeType: videoData.videoFormats[0]?.mimeType ?? "",
     languageMode: options.audioTrackLanguageMode,
@@ -57,6 +59,55 @@ export function resolveInitialAudioFormat({ options, videoData }: OptionsVideoDa
     browserLanguage: navigator.language,
     customLanguage: options.customLanguage
   });
+  return preferAllowedLanguage({
+    preferred,
+    options,
+    audioFormats: videoData.audioFormats
+  });
+}
+
+type PreferAllowedLanguageParams = Prettify<{
+  preferred: AdaptiveFormatItem | null;
+  options: Options;
+  audioFormats: AdaptiveFormatItem[];
+}>;
+function preferAllowedLanguage({ preferred, options, audioFormats }: PreferAllowedLanguageParams) {
+  const preferredTrackId = preferred?.audioTrack?.id;
+  const isPreferredAllowed = !preferredTrackId || isAudioTrackInLanguages({
+    trackId: preferredTrackId,
+    languages: options.audioLanguages
+  });
+  if (isPreferredAllowed) {
+    return preferred;
+  }
+
+  for (const language of options.audioLanguages) {
+    const matches = audioFormats.filter(format => isTrackOfLanguage({
+      format,
+      language,
+      isAutoDubbingIncluded: options.includeAutoDubbing
+    }));
+    const match = matches.find(format => format.itag === preferred?.itag) ?? matches[0];
+    if (match) {
+      return match;
+    }
+  }
+
+  return preferred;
+}
+
+function isTrackOfLanguage({ format, language, isAutoDubbingIncluded }: {
+  format: AdaptiveFormatItem;
+  language: string;
+  isAutoDubbingIncluded: boolean;
+}) {
+  const trackId = format.audioTrack?.id;
+  if (!trackId) {
+    return false;
+  }
+
+  const isAutoDubBlocked = !isAutoDubbingIncluded && trackId.endsWith(AUTO_DUB_TRACK_SUFFIX);
+  return !isAutoDubBlocked && normalizeLanguageCode(trackId) === language;
 }
 
 type FindMatchedCustomLangCodeParams = Prettify<{

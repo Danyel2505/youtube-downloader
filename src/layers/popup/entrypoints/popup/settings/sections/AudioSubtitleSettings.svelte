@@ -5,6 +5,7 @@
   import type { SlidingSettingsProps } from "../settings-props";
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsSwitchRow from "../ui/SettingsSwitchRow.svelte";
+  import AudioLanguagesSection from "./AudioLanguagesSection.svelte";
   import AudioTrackSection from "./AudioTrackSection.svelte";
   import CaptionLanguageSection from "./CaptionLanguageSection.svelte";
   import { setOption } from "@/lib/storage/storage";
@@ -48,5 +49,6 @@
     }}
   />
   <AudioTrackSection {options} {slideDuration} />
+  <AudioLanguagesSection {options} />
   <CaptionLanguageSection {options} />
 </SettingsGroup>
