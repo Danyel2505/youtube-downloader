@@ -3,21 +3,29 @@ import { z } from "@/lib/zod";
 
 const UPDATE_CHECK_ALARM = "ytdlUpdateCheck";
 const CHECK_PERIOD_MINUTES = 24 * 60;
-const LATEST_RELEASE_API = "https://api.github.com/repos/avi12/youtube-downloader/releases/latest";
-const TAG_VERSION_PREFIX = /^v/;
+const RELEASES_API = "https://api.github.com/repos/avi12/youtube-downloader/releases?per_page=30";
+const STABLE_TAG_PATTERN = /^v(\d+\.\d+\.\d+)$/;
 const BADGE_TEXT = "!";
 const BADGE_COLOR = "#cc0000";
 
-const latestReleaseSchema = z.object({
-  tag_name: z.string()
-});
+const releasesSchema = z.array(
+  z.object({
+    tag_name: z.string(),
+    draft: z.boolean(),
+    prerelease: z.boolean()
+  })
+);
 
-function isNewerVersion(candidate: string, current: string) {
-  return candidate.localeCompare(current, undefined, { numeric: true }) > 0;
+function compareVersions(versionA: string, versionB: string) {
+  return versionA.localeCompare(versionB, undefined, { numeric: true });
 }
 
-async function fetchLatestVersion() {
-  const response = await fetch(LATEST_RELEASE_API, {
+function getMajorVersion(version: string) {
+  return version.split(".")[0];
+}
+
+async function fetchLatestVersion(currentVersion: string) {
+  const response = await fetch(RELEASES_API, {
     headers: {
       Accept: "application/vnd.github+json"
     }
@@ -26,8 +34,16 @@ async function fetchLatestVersion() {
     return null;
   }
 
-  const release = latestReleaseSchema.safeParse(await response.json());
-  return release.success ? release.data.tag_name.replace(TAG_VERSION_PREFIX, "") : null;
+  const releases = releasesSchema.safeParse(await response.json());
+  if (!releases.success) {
+    return null;
+  }
+
+  const sameLineVersions = releases.data
+    .filter(release => !release.draft && !release.prerelease)
+    .flatMap(release => STABLE_TAG_PATTERN.exec(release.tag_name)?.slice(1) ?? [])
+    .filter(version => getMajorVersion(version) === getMajorVersion(currentVersion));
+  return sameLineVersions.toSorted(compareVersions).at(-1) ?? null;
 }
 
 async function applyAvailableUpdate(availableVersion: string | null) {
@@ -42,13 +58,13 @@ async function applyAvailableUpdate(availableVersion: string | null) {
 }
 
 async function checkForUpdate() {
-  const latestVersion = await fetchLatestVersion();
+  const currentVersion = browser.runtime.getManifest().version;
+  const latestVersion = await fetchLatestVersion(currentVersion);
   if (!latestVersion) {
     return;
   }
 
-  const currentVersion = browser.runtime.getManifest().version;
-  await applyAvailableUpdate(isNewerVersion(latestVersion, currentVersion) ? latestVersion : null);
+  await applyAvailableUpdate(compareVersions(latestVersion, currentVersion) > 0 ? latestVersion : null);
 }
 
 async function handleUpdateCheckAlarm({ name }: Browser.alarms.Alarm) {

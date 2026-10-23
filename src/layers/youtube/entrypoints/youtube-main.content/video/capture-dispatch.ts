@@ -54,9 +54,10 @@ function readInitialDataTitle(videoId: string) {
     return "";
   }
 
-  return data.contents
+  const runs = data.contents
     ?.twoColumnWatchNextResults?.results?.results?.contents?.[0]
-    ?.videoPrimaryInfoRenderer?.title?.runs?.[0]?.text ?? "";
+    ?.videoPrimaryInfoRenderer?.title?.runs ?? [];
+  return runs.map(run => run.text).join("");
 }
 
 export type ShortsPageData = {
@@ -90,6 +91,12 @@ function readShortsDisplayTitle(pageData: ShortsPageData | undefined) {
   }
 
   return "";
+}
+
+function readPlayerTitle(videoId: string) {
+  const playerVideoData = getMoviePlayer()?.getVideoData?.();
+  const isMatchingVideoId = playerVideoData?.video_id === videoId;
+  return isMatchingVideoId ? playerVideoData.title : "";
 }
 
 function readDisplayTitle({ route, videoId, shortsPageData }: {
@@ -130,6 +137,10 @@ export async function buildAndDispatchVideoData({ playerResponse, shortsPageData
     if (displayTitle) {
       videoData.title = displayTitle;
     }
+  }
+
+  if (!videoData.title) {
+    videoData.title = readPlayerTitle(videoData.videoId);
   }
 
   videoDataCache.set(videoData.videoId, videoData);
