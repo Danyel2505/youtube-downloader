@@ -86,7 +86,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     fallbackVideoCodec: CODEC_H264_ENCODER,
     preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC,
-    allowNonNativeVideo: true,
     subtitleCodec: SUBTITLE_CODEC_MOV_TEXT
   },
   avi: {

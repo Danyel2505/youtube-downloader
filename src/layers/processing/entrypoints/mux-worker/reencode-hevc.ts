@@ -196,6 +196,11 @@ async function buildDecoderConfig({ sourceMimeType, header }: {
     codedHeight: header.height
   };
   const decoderSupport = await VideoDecoder.isConfigSupported(decoderConfig).catch(() => null);
+  log.info("Video decoder config", {
+    isSupported: !!decoderSupport?.supported,
+    config: decoderConfig
+  });
+
   if (!decoderSupport?.supported) {
     throw new Error(`This browser can't decode ${decoderConfig.codec || header.fourcc} video`);
   }

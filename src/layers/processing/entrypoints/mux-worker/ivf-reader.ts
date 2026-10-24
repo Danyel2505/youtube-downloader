@@ -248,5 +248,7 @@ export function resolveDecoderCodec({ mimeType, fourcc }: {
   fourcc: string;
 }) {
   const declaredCodec = mimeType.match(/codecs="?([^";]+)/i)?.[1];
-  return declaredCodec ?? FALLBACK_DECODER_CODECS[fourcc] ?? "";
+  // YouTube lists VP9 as a bare "vp9", which WebCodecs rejects: it wants "vp09.PP.LL.DD"
+  const isFullCodecString = !!declaredCodec?.includes(".");
+  return isFullCodecString ? declaredCodec! : (FALLBACK_DECODER_CODECS[fourcc] ?? declaredCodec ?? "");
 }
