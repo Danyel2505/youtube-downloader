@@ -1,7 +1,7 @@
 import { downloadViaCdn } from "./cdn-downloader";
+import { downloadWithFilename } from "./named-download";
 import { attemptSabrDownload } from "./sabr-attempt";
 import { MessageType, sendMessageToTab } from "@/lib/messaging/messaging";
-import { getCompatibleFilename } from "@/lib/utils/filename";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { DownloadType, ProgressType } from "@/types";
 import type { DownloadRequest, Prettify } from "@/types";
@@ -74,10 +74,10 @@ export async function tryDirectUrlDownload({ request }: {
   }
 
   try {
-    const filename = getCompatibleFilename(filenameOutput);
-    const downloadId = await browser.downloads.download({
+    const downloadId = await downloadWithFilename({
       url: resolvedAudioUrl,
-      filename
+      filename: filenameOutput,
+      fallbackName: request.videoId
     });
     log.warn("Direct URL download started, id:", downloadId);
     return downloadId;

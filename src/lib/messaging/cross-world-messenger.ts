@@ -1,4 +1,5 @@
 import type { DownloadAnnouncement } from "@/lib/messaging/messaging";
+import type { LogEntry } from "@/lib/utils/logger";
 import type { DownloadPlanParams } from "@/lib/youtube/download-plan";
 import type { SizeInputs } from "@/lib/youtube/output-size";
 import type {
@@ -44,7 +45,8 @@ export const CrossWorldMessage = {
   ReportPageProgress: "reportPageProgress",
   ReportMainDownloadFailed: "reportMainDownloadFailed",
   MeasureSizeInputs: "measureSizeInputs",
-  AnnounceDownload: "announceDownload"
+  AnnounceDownload: "announceDownload",
+  AppendLog: "appendLog"
 } as const;
 
 export interface PageMessengerSchema {
@@ -143,6 +145,7 @@ export interface PageMessengerSchema {
     isUnavailable?: boolean;
   }): void;
   [CrossWorldMessage.AnnounceDownload](data: DownloadAnnouncement): void;
+  [CrossWorldMessage.AppendLog](data: LogEntry): void;
   [CrossWorldMessage.MeasureSizeInputs](data: {
     videoId: string;
     params: DownloadPlanParams;

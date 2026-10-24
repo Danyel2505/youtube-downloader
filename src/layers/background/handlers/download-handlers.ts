@@ -14,6 +14,7 @@ import {
   initIframeReadyListener,
   registerPopupDownloadHandler
 } from "../download/iframe-downloader";
+import { downloadWithFilename } from "../download/named-download";
 import { clearIframeAutoRetry, handleIframeFallback } from "../download/sabr-attempt";
 import { enqueueToPopupList, removeFromPopupList } from "../queue/popup-list";
 import { signalVideoComplete } from "../queue/sequential-queue";
@@ -150,9 +151,10 @@ export function registerDownloadHandlers() {
     const { blobUrl, filename, videoId } = data;
     const tabId = getTabIdsForVideo(videoId)[0] ?? -1;
     try {
-      const downloadId = await browser.downloads.download({
+      const downloadId = await downloadWithFilename({
         url: blobUrl,
-        filename
+        filename,
+        fallbackName: videoId
       });
       clearIframeAutoRetry(videoId);
       trackDownloadCompleteOnce(downloadId);

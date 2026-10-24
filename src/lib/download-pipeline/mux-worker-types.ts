@@ -11,7 +11,8 @@ export enum WorkerMessageType {
   Result = "result",
   ResultFile = "resultFile",
   Error = "error",
-  Progress = "progress"
+  Progress = "progress",
+  Log = "log"
 }
 
 export enum FFmpegCoreBuild {

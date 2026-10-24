@@ -1,3 +1,4 @@
+import type { LogEntry } from "@/lib/utils/logger";
 import type {
   DownloadRequest,
   DownloadType,
@@ -47,7 +48,10 @@ export const MessageType = {
   PageSabrFetch: "pageSabrFetch",
   StartWatchPageDownload: "startWatchPageDownload",
   StartPopupDownload: "startPopupDownload",
-  AnnounceDownload: "announceDownload"
+  AnnounceDownload: "announceDownload",
+  AppendLog: "appendLog",
+  GetLogs: "getLogs",
+  ClearLogs: "clearLogs"
 } as const;
 
 export type PageSabrFetchRequest = Prettify<{
@@ -179,6 +183,15 @@ export type ProgressUpdate = Prettify<{
 }>;
 
 export interface ProtocolMap {
+  appendLog(data: LogEntry): void;
+
+  getLogs(): {
+    report: string;
+    entryCount: number;
+  };
+
+  clearLogs(): void;
+
   backgroundProxyFetch(data: BackgroundProxyFetchRequest): BackgroundProxyFetchResponse;
 
   streamChunk(data: StreamChunkMessage): void;

@@ -4,6 +4,9 @@ import { WorkerMessageType } from "./mux-worker-types";
 import { getPendingJobReject, sendCancelToWorker, setWorkerPort } from "./worker-jobs";
 import { createHostWorkerPort } from "./worker-port-host";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
+import { createLogger, LogScope } from "@/lib/utils/logger";
+
+const log = createLogger(LogScope.Ffmpeg);
 
 export {
   runEmbedMetadata,
@@ -45,6 +48,7 @@ export async function initMuxWorker({ coreBuild, wasmBinary }: {
 
     worker.onerror = e => {
       const error = new Error(`Worker crashed: ${e.message}`);
+      log.error("Mux worker crashed:", e.message);
       const rejectJob = getPendingJobReject();
       const hasRejectJob = rejectJob !== null;
       if (hasRejectJob) {

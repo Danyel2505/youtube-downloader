@@ -1,3 +1,4 @@
+import type { LogEntry } from "@/lib/utils/logger";
 import { INITIAL_OPTIONS } from "@/lib/youtube/video-helpers";
 import type { DownloadProgressEntry, InterruptedDownload, Options, Prettify } from "@/types";
 
@@ -64,6 +65,8 @@ export const isFFmpegReadyItem = storage.defineItem<boolean>("local:isFFmpegRead
 export const interruptedDownloadsItem = storage.defineItem<Record<string, InterruptedDownload>>("local:interruptedDownloads", {
   fallback: {}
 });
+
+export const logEntriesItem = storage.defineItem<LogEntry[]>("local:ytdlLogEntries", { fallback: [] });
 
 export const optionsItem = storage.defineItem<Options>("local:options", { fallback: INITIAL_OPTIONS });
 

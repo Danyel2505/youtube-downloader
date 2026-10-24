@@ -1,5 +1,6 @@
 import { WorkerMessageType } from "./mux-worker-types";
 import type { ResponseHandlerMap, WorkerCommandMap, WorkerCommandType, WorkerResponse } from "./worker-port-types";
+import { forwardLogEntry } from "@/lib/utils/logger";
 
 export type HostWorkerPort = {
   send<T extends WorkerCommandType>(
@@ -31,6 +32,9 @@ export function createHostWorkerPort() {
         break;
       case WorkerMessageType.Error:
         responseHandlers[WorkerMessageType.Error]?.({ message: message.message });
+        break;
+      case WorkerMessageType.Log:
+        forwardLogEntry(message.entry);
         break;
       case WorkerMessageType.Progress:
         responseHandlers[WorkerMessageType.Progress]?.({

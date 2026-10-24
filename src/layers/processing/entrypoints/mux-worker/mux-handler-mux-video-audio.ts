@@ -10,12 +10,29 @@ import {
   isVideoNativeForContainer,
   resolveMultiTrackExtension
 } from "@/lib/utils/containers";
+import { createLogger, LogScope } from "@/lib/utils/logger";
+
+const log = createLogger(LogScope.Ffmpeg);
 
 const WORKERFS_MOUNT_SUFFIX = "-opfs-in";
 const REENCODED_MOUNT_SUFFIX = "-reencoded-in";
 const OPFS_OUT_SUFFIX = "-opfs-out";
 const MKV_EXTENSION = "mkv";
 const VIDEO_TEMP_SUFFIX = "video";
+
+function logMuxJob({ job, targetExtension }: {
+  job: MuxVideoAudioJob;
+  targetExtension: string;
+}) {
+  log.info("Mux job", {
+    videoId: job.videoId,
+    targetExtension,
+    isReencode: !!job.videoReencode,
+    audioTracks: job.audioTracks.length,
+    subtitleTracks: job.subtitleTracks.length,
+    videoBytes: job.videoFile?.size ?? job.videoData?.byteLength
+  });
+}
 
 export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
   const {
@@ -42,6 +59,11 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
     targetExtension
   });
   const useIntermediateMkv = !isMkv && isNonNativeContainer;
+
+  logMuxJob({
+    job,
+    targetExtension
+  });
 
   const isWorkerfsVideo = !!videoFile;
   const workerfsDir = `/${videoId}${WORKERFS_MOUNT_SUFFIX}`;

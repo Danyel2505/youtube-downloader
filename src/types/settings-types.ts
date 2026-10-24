@@ -73,6 +73,7 @@ export type Options = Prettify<{
   isShowGridDownloadButtons: boolean;
   isNotifyOnIdle: boolean;
   isRevealOnComplete: boolean;
+  isLogsEnabled: boolean;
   playlistDownloadMode: PlaylistDownloadMode;
   playlistOutputMode: PlaylistOutputMode;
   playlistAudioOutputMode: PlaylistOutputMode;

@@ -1,3 +1,4 @@
+import { forwardAllLogsToBackground } from "@/lib/logs/log-forward";
 import type { ProcessStreamEndData } from "@/lib/messaging/offscreen-messaging";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { resolveQualityLabel } from "@/lib/youtube/audio-format-helpers";
@@ -9,6 +10,7 @@ import { createSabrStallTimer } from "#background/download/sabr-stall-timer";
 import { buildSubtitleTracks } from "#background/download/subtitle-track-builder";
 
 const log = createLogger(LogScope.Worker);
+forwardAllLogsToBackground(LogScope.Worker);
 
 const WORKER_MESSAGE_CHUNK = "worker-chunk";
 const WORKER_MESSAGE_STREAM_END = "worker-stream-end";

@@ -5,12 +5,13 @@ import {
   initFfmpeg,
   initPortReceiver,
   postError,
+  rememberFfmpegLine,
   state,
   trackFFmpegProgressFromLog
 } from "./mux-state";
 import type { FFmpegFactory } from "./mux-state";
 import { FFmpegCoreBuild, WorkerMessageType } from "@/lib/download-pipeline/mux-worker-types";
-import { createLogger, LogScope } from "@/lib/utils/logger";
+import { createLogger, LogLevel, LogScope, setLogSink } from "@/lib/utils/logger";
 import type { Prettify } from "@/types";
 
 const log = createLogger(LogScope.Ffmpeg);
@@ -38,6 +39,12 @@ async function onInitMessage(e: MessageEvent<InitMessage>) {
 
   removeEventListener("message", onInitMessage);
   initPortReceiver(e.data.port);
+  // ffmpeg's per-frame stderr is debug-level, so only the meaningful lines reach the host
+  setLogSink(entry => {
+    if (entry.level !== LogLevel.Debug) {
+      state.portReceiver?.send(WorkerMessageType.Log, { entry });
+    }
+  });
 
   const { default: createFFmpegCore } = await FFMPEG_CORE_GLUE[e.data.coreBuild]();
   const ffmpeg = await createFFmpegCore({ wasmBinary: e.data.wasmBinary }).catch((error: unknown) => {
@@ -59,6 +66,7 @@ async function onInitMessage(e: MessageEvent<InitMessage>) {
     // summary) to stderr, which would otherwise flood the chrome://extensions
     // error panel. Genuine mux failures still surface via postError.
     log.debug(message);
+    rememberFfmpegLine(message);
     trackFFmpegProgressFromLog(message);
   });
 

@@ -36,6 +36,7 @@ export const INITIAL_OPTIONS: Options = {
   isShowGridDownloadButtons: true,
   isNotifyOnIdle: false,
   isRevealOnComplete: false,
+  isLogsEnabled: false,
   playlistDownloadMode: PlaylistDownloadMode.Fast,
   playlistOutputMode: PlaylistOutputMode.Individual,
   playlistAudioOutputMode: PlaylistOutputMode.Zip,

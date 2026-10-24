@@ -8,8 +8,10 @@ import type { ShortsPageData } from "./video/capture-dispatch";
 import { cancelAllActiveDownloads } from "./video/download";
 import { extractPlaylistMetadata, handleNavigateSuccess } from "./video/playlist-metadata";
 import { extractAndDispatchVideoData } from "./video/video-data";
+import { captureLogsFromPage } from "@/lib/logs/log-capture";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
-import { initContentOptions } from "@/lib/ui/synced-stores.svelte";
+import { CONTENT_OPTIONS, initContentOptions } from "@/lib/ui/synced-stores.svelte";
+import { LogScope } from "@/lib/utils/logger";
 import type { PlayerResponse } from "@/types";
 
 const YTDL_IFRAME_QUERY_PARAM = "ytdl=1";
@@ -61,6 +63,14 @@ export default defineContentScript({
     if (isUnrelatedIframe) {
       return;
     }
+
+    captureLogsFromPage({
+      scope: LogScope.Main,
+      isEnabled: () => CONTENT_OPTIONS.isLogsEnabled,
+      send(entry) {
+        crossWorldMessenger.sendMessage(CrossWorldMessage.AppendLog, entry).catch(() => {});
+      }
+    });
 
     if (self !== top) {
       setupIframeSilencer();

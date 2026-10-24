@@ -37,6 +37,10 @@ export function registerDownloadProgressHandlers() {
     sendMessage(MessageType.DownloadBlobUrl, data).catch(() => {});
   });
 
+  crossWorldMessenger.onMessage(CrossWorldMessage.AppendLog, ({ data }) => {
+    sendMessage(MessageType.AppendLog, data).catch(() => {});
+  });
+
   crossWorldMessenger.onMessage(CrossWorldMessage.ReportPageProgress, ({ data }) => {
     sendMessage(MessageType.ReportPageProgress, data).catch(() => {});
   });

@@ -9,7 +9,10 @@ import { pruneRecentDownloads, touchAllRecentDownloads } from "@/lib/storage/rec
 import { optionsItem } from "@/lib/storage/storage";
 import { DownloadType } from "@/types";
 import type { Prettify } from "@/types";
+import { downloadWithFilename } from "#background/download/named-download";
 import { trackDownloadComplete } from "#background/lib/analytics/ga4";
+
+const FALLBACK_DOWNLOAD_NAME = "video";
 
 type DownloadIdDataParams = Prettify<{
   downloadId: number;
@@ -217,9 +220,10 @@ export function notifyWatchTabsOnComplete({ downloadId, videoId, filename }: Not
 
 export function registerRecentDownloadHandlers() {
   onMessage(MessageType.PipelineDownload, async ({ data }) => {
-    const downloadId = await browser.downloads.download({
+    const downloadId = await downloadWithFilename({
       url: data.blobUrl,
-      filename: data.filename
+      filename: data.filename,
+      fallbackName: data.recentContext?.videoId ?? FALLBACK_DOWNLOAD_NAME
     });
     scheduleRevokeBlobUrl({
       downloadId,

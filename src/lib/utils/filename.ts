@@ -10,6 +10,17 @@ export function hasVisibleContent(filename: string) {
   return /[\p{L}\p{N}\p{P}\p{S}]/u.test(filename);
 }
 
+type EnsureNamedFilenameParams = {
+  filename: string;
+  fallbackName: string;
+};
+// A name that's only an extension (".mkv") makes the browser invent one from the URL, e.g. a blob's UUID
+export function ensureNamedFilename({ filename, fallbackName }: EnsureNamedFilenameParams) {
+  const { name, extension } = splitFilenameAndExtension(getCompatibleFilename(filename).trim());
+  const baseName = hasVisibleContent(name) ? name.trim() : fallbackName;
+  return extension ? `${baseName}.${extension}` : baseName;
+}
+
 export function getFileExtension(filename: string) {
   const iDot = filename.lastIndexOf(".");
   const hasDot = iDot !== -1;

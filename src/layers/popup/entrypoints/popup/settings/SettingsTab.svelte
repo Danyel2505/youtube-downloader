@@ -3,6 +3,7 @@
   import CompletionSettings from "./sections/CompletionSettings.svelte";
   import DownloadTypeSettings from "./sections/DownloadTypeSettings.svelte";
   import FormatSettings from "./sections/FormatSettings.svelte";
+  import LogsSettings from "./sections/LogsSettings.svelte";
   import PlaylistSettings from "./sections/PlaylistSettings.svelte";
   import VideoQualitySettings from "./sections/VideoQualitySettings.svelte";
   import type { Options } from "@/types";
@@ -23,6 +24,7 @@
   <PlaylistSettings {options} />
   <AudioSubtitleSettings {options} slideDuration={SLIDE_DURATION} />
   <CompletionSettings {options} />
+  <LogsSettings {options} />
 </div>
 
 <style>

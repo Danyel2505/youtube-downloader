@@ -3,8 +3,11 @@ import { MUX_JOB_CANCELLED_ERROR } from "./mux-queue";
 import { processSingleMedia } from "./process-single-media";
 import { processVideoAudio } from "./process-video-audio";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { DownloadType } from "@/types";
 import type { Prettify, ProcessStreamData, VideoTabParams } from "@/types";
+
+const log = createLogger(LogScope.Pipeline);
 
 type ActiveJob = VideoTabParams;
 
@@ -47,6 +50,13 @@ async function processItem(item: ProcessStreamData) {
     return !activeJobs.has(videoId);
   }
 
+  log.info("Processing started", {
+    videoId,
+    type,
+    filenameOutput,
+    reencode: item.videoReencode
+  });
+
   try {
     const isVideoAndAudio = type === DownloadType.VideoAndAudio;
     if (isVideoAndAudio) {
@@ -64,9 +74,11 @@ async function processItem(item: ProcessStreamData) {
     const isErrorInstance = error instanceof Error;
     const isMuxCancellation = isErrorInstance && error.message === MUX_JOB_CANCELLED_ERROR;
     if (isMuxCancellation) {
+      log.info("Processing cancelled for", videoId);
       return;
     }
 
+    log.error("Processing failed for", videoId, error);
     await reportRemoval({
       videoId,
       tabId

@@ -1,3 +1,4 @@
+import { registerFilenameEnforcer } from "./download/named-download";
 import { registerChunkHandlers } from "./handlers/chunk-handlers";
 import { registerDownloadHandlers } from "./handlers/download-handlers";
 import { registerPipelineHandlers } from "./handlers/pipeline-handlers";
@@ -5,6 +6,7 @@ import { ensureProcessor } from "./handlers/processor";
 import { registerStorageHandlers } from "./handlers/storage-handlers";
 import { registerTabLifecycleHandlers } from "./handlers/tab-lifecycle";
 import { registerRecentDownloadsRetention } from "./recent/recent-downloads";
+import { captureLogsWhileEnabled } from "@/lib/logs/log-capture-extension";
 import { MessageType, sendMessageToTab } from "@/lib/messaging/messaging";
 import { initOffscreenPortListener } from "@/lib/messaging/offscreen-messaging";
 import {
@@ -17,6 +19,7 @@ import {
 } from "@/lib/storage/storage";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { trackInstall, registerDailyHeartbeat, setUninstallUrl } from "#background/lib/analytics/ga4";
+import { appendLog, registerLogHandlers } from "#background/lib/logs/log-store";
 import { registerUpdateCheck } from "#background/lib/updates/update-check";
 import { registerCdnOriginRule } from "#background/lib/youtube/sabr/cdn-origin-rule";
 import { onSabrBodyCaptured, startSabrRequestCapture } from "#background/lib/youtube/sabr/request-capture";
@@ -24,6 +27,14 @@ import { onSabrBodyCaptured, startSabrRequestCapture } from "#background/lib/you
 const log = createLogger(LogScope.Background);
 
 export function main() {
+  registerLogHandlers();
+  registerFilenameEnforcer();
+  captureLogsWhileEnabled({
+    scope: LogScope.Background,
+    send(entry) {
+      appendLog(entry).catch(() => {});
+    }
+  }).catch(() => {});
   initOffscreenPortListener();
   registerCdnOriginRule().catch(error => log.error("Failed to register the CDN origin rule", error));
   startSabrRequestCapture();

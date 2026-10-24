@@ -9,10 +9,14 @@ import {
 import { runMuxVideoAudio } from "./ffmpeg-instance";
 import { OPFS_MUX_OUTPUT_SUFFIX } from "./opfs-constants";
 import { addToPlaylistBundle } from "./playlist-bundle";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { ProgressType } from "@/types";
 import type { Prettify, ProcessStreamData } from "@/types";
 
+const log = createLogger(LogScope.Pipeline);
+
 const DEFAULT_PLAYLIST_TITLE = "Playlist";
+const MS_PER_SECOND = 1000;
 
 type ProcessVideoAudioParams = Prettify<{
   item: ProcessStreamData;
@@ -61,6 +65,7 @@ export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudio
 
   const videoStreamName = item.videoFile?.name;
 
+  const muxStartedAt = Date.now();
   let outputFile: File;
   try {
     outputFile = await runMuxVideoAudio({
@@ -86,6 +91,11 @@ export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudio
     }
   }
 
+  log.info("Mux finished", {
+    videoId,
+    outputBytes: outputFile.size,
+    seconds: Math.round((Date.now() - muxStartedAt) / MS_PER_SECOND)
+  });
   const isDownloadCancelled = isCancelled();
   if (isDownloadCancelled) {
     const root = await navigator.storage.getDirectory();

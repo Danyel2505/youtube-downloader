@@ -2,9 +2,24 @@ import { MUX_JOB_CANCELLED_ERROR } from "@/lib/download-pipeline/mux-queue";
 import { WorkerMessageType } from "@/lib/download-pipeline/mux-worker-types";
 import { createWorkerPortReceiver } from "@/lib/download-pipeline/worker-port-receiver";
 import type { WorkerPortReceiver } from "@/lib/download-pipeline/worker-port-receiver";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { ProgressType } from "@/types";
 import type { Prettify } from "@/types";
 import type { FFmpegCoreModule } from "@ffmpeg/types";
+
+const log = createLogger(LogScope.Ffmpeg);
+
+const RECENT_FFMPEG_LINE_LIMIT = 12;
+const MAX_FFMPEG_LINE_LENGTH = 120;
+const recentFfmpegLines: string[] = [];
+
+export function rememberFfmpegLine(line: string) {
+  recentFfmpegLines.push(line.slice(0, MAX_FFMPEG_LINE_LENGTH));
+
+  if (recentFfmpegLines.length > RECENT_FFMPEG_LINE_LIMIT) {
+    recentFfmpegLines.shift();
+  }
+}
 
 export type FFmpegFactory = (options: { wasmBinary: ArrayBuffer }) => Promise<FFmpegCoreModule>;
 
@@ -147,5 +162,6 @@ export function postFileResult(file: File) {
 }
 
 export function postError(message: string) {
+  log.error("Mux worker failed:", message, "| last ffmpeg lines:", recentFfmpegLines.join(" // "));
   state.portReceiver!.send(WorkerMessageType.Error, { message });
 }

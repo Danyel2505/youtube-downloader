@@ -4,6 +4,7 @@ import { handleWorkerMessage, WORKER_MESSAGE_PREFIX, type WorkerMessage } from "
 import { resolveFFmpegCoreBuild } from "@/lib/download-pipeline/ffmpeg-core-build";
 import { initMuxWorker } from "@/lib/download-pipeline/ffmpeg-instance";
 import { sweepOrphanedOpfsFiles } from "@/lib/download-pipeline/opfs-constants";
+import { forwardAllLogsToBackground } from "@/lib/logs/log-forward";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 
@@ -25,6 +26,7 @@ addEventListener("message", e => {
 });
 
 registerOffscreenMessageListeners();
+forwardAllLogsToBackground(LogScope.Pipeline);
 
 await sweepOrphanedOpfsFiles();
 

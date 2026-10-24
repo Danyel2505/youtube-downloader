@@ -1,5 +1,6 @@
 import App from "./App.svelte";
 import { loadOpenYouTubeTabs } from "./downloads/youtube-tab";
+import { forwardLogsToBackground } from "@/lib/logs/log-capture-extension";
 import { isFFmpegReadyItem } from "@/lib/storage/storage";
 import {
   musicListItem,
@@ -10,8 +11,11 @@ import {
   videoOnlyListItem,
   videoQueueItem
 } from "@/lib/storage/storage";
+import { LogScope } from "@/lib/utils/logger";
 import { INITIAL_OPTIONS as defaultOptions } from "@/lib/youtube/video-helpers";
 import { mount } from "svelte";
+
+forwardLogsToBackground(LogScope.Popup).catch(() => {});
 
 const [
   isFFmpegReady,

@@ -460,6 +460,20 @@ type StartBackgroundDownloadParams = Prettify<{
 }>;
 export async function startBackgroundDownload({ request: originalRequest, tabId }: StartBackgroundDownloadParams) {
   const { videoId, metadata } = originalRequest;
+  log.info("Download requested", {
+    videoId,
+    type: originalRequest.type,
+    videoItag: originalRequest.videoItag,
+    audioItag: originalRequest.audioItag,
+    audioTrackId: originalRequest.audioTrackId,
+    filenameOutput: originalRequest.filenameOutput,
+    reencode: originalRequest.videoReencode,
+    isIframeFallback: originalRequest.isIframeFallback,
+    hasSabrConfig: !!originalRequest.sabrConfig,
+    hasPoToken: !!originalRequest.poToken,
+    hasResolvedVideoUrl: !!originalRequest.resolvedVideoUrl,
+    hasResolvedAudioUrl: !!originalRequest.resolvedAudioUrl
+  });
   inFlightDownloads.set(videoId, {
     request: originalRequest,
     tabId

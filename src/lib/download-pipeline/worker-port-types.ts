@@ -1,5 +1,6 @@
 import type { EmbedMetadataJob, MuxVideoAudioJob, TranscodeAudioJob, TranscodeFileJob } from "./mux-worker-types";
 import { WorkerMessageType } from "./mux-worker-types";
+import type { LogEntry } from "@/lib/utils/logger";
 import type { ProgressType } from "@/types";
 
 export type WorkerCommandMap = {
@@ -14,6 +15,7 @@ export type WorkerDataResponseMap = {
   [WorkerMessageType.Result]: { data: ArrayBuffer | null };
   [WorkerMessageType.ResultFile]: { data: File };
   [WorkerMessageType.Error]: { message: string };
+  [WorkerMessageType.Log]: { entry: LogEntry };
   [WorkerMessageType.Progress]: {
     videoId: string;
     progress: number;

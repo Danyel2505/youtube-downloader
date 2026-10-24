@@ -9,10 +9,12 @@ import { injectDownloadStateStyles } from "./ui/download-state-styles";
 import { setNativeDownloadVisibility, syncGridDownloadButtons } from "./ui/page-router";
 import { handlePageChange } from "./ui/page-router";
 import { mountWatchSnackbar } from "./ui/watch-snackbar";
+import { forwardLogsToBackground } from "@/lib/logs/log-capture-extension";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import { optionsItem, statusProgressItem } from "@/lib/storage/storage";
 import { initCompletedDownloadsStore } from "@/lib/ui/completed-downloads-store.svelte";
 import { initContentOptions } from "@/lib/ui/synced-stores.svelte";
+import { LogScope } from "@/lib/utils/logger";
 import { INITIAL_OPTIONS as defaultOptions } from "@/lib/youtube/video-helpers";
 import { forwardSabrCredentialsWithRetry, listenForSabrBodyReady } from "#youtube/lib/youtube/sabr/credentials";
 
@@ -28,6 +30,7 @@ export default defineContentScript({
       return;
     }
 
+    forwardLogsToBackground(LogScope.Isolated).catch(() => {});
     registerPageSabrFetchBridge();
 
     if (isDownloadIframe) {

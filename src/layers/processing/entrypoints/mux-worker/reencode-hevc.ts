@@ -1,7 +1,10 @@
 import { isKeyFrame, openIvf, resolveDecoderCodec } from "./ivf-reader";
 import type { IvfFrame, IvfHeader } from "./ivf-reader";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { buildHevcEncoderConfig, isHevcEncoderConfigSupported } from "@/lib/video-reencode/hevc-config";
 import type { Prettify, VideoReencodeSpec } from "@/types";
+
+const log = createLogger(LogScope.Ffmpeg);
 
 const MAX_DECODE_QUEUE = 4;
 const MAX_ENCODE_QUEUE = 4;
@@ -9,6 +12,7 @@ const MAX_PENDING_FRAMES = 6;
 const KEY_FRAME_INTERVAL_SECONDS = 2;
 const PROGRESS_REPORT_DELTA = 0.01;
 const EVEN_DIMENSION_STEP = 2;
+const PROGRESS_LOG_STEPS = 10;
 
 type ReencodeProgress = Prettify<{
   encodedFrameCount: number;
@@ -60,6 +64,11 @@ async function configureEncoder({ spec, encoder, progress }: ReencodeContext, fr
     bitrate: spec.bitrate
   });
   const isSupported = await isHevcEncoderConfigSupported(config);
+  log.info("H.265 encoder config", {
+    isSupported,
+    config
+  });
+
   if (!isSupported) {
     throw new Error(`This device can't encode H.265 video at ${config.width}x${config.height}`);
   }
@@ -82,10 +91,19 @@ async function encodeFrame(context: ReencodeContext, frame: VideoFrame) {
   progress.encodedFrameCount++;
 }
 
+function toLogStep(progressFraction: number) {
+  return Math.floor(progressFraction * PROGRESS_LOG_STEPS);
+}
+
 function reportEncodeProgress({ header, progress, onProgress }: ReencodeContext) {
   const fraction = header.frameCount > 0 ? Math.min(progress.encodedFrameCount / header.frameCount, 1) : 0;
   if (fraction - progress.lastReportedProgress < PROGRESS_REPORT_DELTA) {
     return;
+  }
+
+  const isNewLogStep = toLogStep(fraction) > toLogStep(progress.lastReportedProgress);
+  if (isNewLogStep) {
+    log.info("H.265 encode progress", `${progress.encodedFrameCount}/${header.frameCount} frames`);
   }
 
   progress.lastReportedProgress = fraction;
@@ -188,9 +206,10 @@ async function buildDecoderConfig({ sourceMimeType, header }: {
 type CreateCodecsParams = Prettify<{
   output: FileSystemSyncAccessHandle;
   pendingFrames: VideoFrame[];
+  progress: ReencodeProgress;
   rejectFailure: (error: Error) => void;
 }>;
-function createCodecs({ output, pendingFrames, rejectFailure }: CreateCodecsParams) {
+function createCodecs({ output, pendingFrames, progress, rejectFailure }: CreateCodecsParams) {
   output.truncate(0);
   let writeOffset = 0;
   const encoder = new VideoEncoder({
@@ -201,7 +220,7 @@ function createCodecs({ output, pendingFrames, rejectFailure }: CreateCodecsPara
       writeOffset += bytes.byteLength;
     },
     error(error) {
-      rejectFailure(new Error(`H.265 encoder failed: ${error.message}`));
+      rejectFailure(new Error(`H.265 encoder failed after ${progress.encodedFrameCount} frames: ${error.name} ${error.message}`));
     }
   });
   const decoder = new VideoDecoder({
@@ -209,7 +228,7 @@ function createCodecs({ output, pendingFrames, rejectFailure }: CreateCodecsPara
       pendingFrames.push(frame);
     },
     error(error) {
-      rejectFailure(new Error(`Video decoder failed: ${error.message}`));
+      rejectFailure(new Error(`Video decoder failed after ${progress.encodedFrameCount} frames: ${error.name} ${error.message}`));
     }
   });
   return {
@@ -228,13 +247,27 @@ export async function reencodeIvfToHevc({
     sourceMimeType,
     header
   });
+  log.info("H.265 re-encode input", {
+    fourcc: header.fourcc,
+    width: header.width,
+    height: header.height,
+    frameCount: header.frameCount,
+    decoderCodec: decoderConfig.codec,
+    spec
+  });
 
   const { promise: failure, reject: rejectFailure } = Promise.withResolvers<never>();
   failure.catch(() => {});
   const pendingFrames: VideoFrame[] = [];
+  const progress: ReencodeProgress = {
+    encodedFrameCount: 0,
+    lastReportedProgress: 0,
+    isEncoderConfigured: false
+  };
   const { encoder, decoder } = createCodecs({
     output,
     pendingFrames,
+    progress,
     rejectFailure
   });
   const context: ReencodeContext = {
@@ -245,11 +278,7 @@ export async function reencodeIvfToHevc({
     pendingFrames,
     failure,
     keyFrameInterval: Math.max(1, Math.round(spec.frameRate * KEY_FRAME_INTERVAL_SECONDS)),
-    progress: {
-      encodedFrameCount: 0,
-      lastReportedProgress: 0,
-      isEncoderConfigured: false
-    },
+    progress,
     onProgress,
     throwIfCancelled
   };
@@ -272,5 +301,9 @@ export async function reencodeIvfToHevc({
   }
 
   output.flush();
-  return context.progress.encodedFrameCount;
+  log.info("H.265 re-encode finished", {
+    encodedFrames: progress.encodedFrameCount,
+    outputBytes: output.getSize()
+  });
+  return progress.encodedFrameCount;
 }
