@@ -2,6 +2,7 @@
   import PolymerSelect from "../polymer-select/PolymerSelect.svelte";
   import OptionHint from "./OptionHint.svelte";
   import { createOutputSelectState, type OutputSelectProps } from "@/lib/download-options/output-select.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { getCompatibleFilename } from "@/lib/utils/containers";
 
   interface Props extends OutputSelectProps {
@@ -45,7 +46,7 @@
       autocomplete="off"
       disabled={props.isDownloading || undefined}
       invalid={!output.isFilenameValid || undefined}
-      label="Filename"
+      label={t("Filename")}
       oninput={handleInput}
       spellcheck={false}
       value={props.filename}
@@ -54,7 +55,7 @@
       <PolymerSelect
         id="format-select"
         disabled={props.isDownloading}
-        label="Format"
+        label={t("Format")}
         onchange={props.onextensionchange}
         options={output.formatOptions}
         value={props.extension}
@@ -65,7 +66,7 @@
     <OptionHint text={output.formatDescription} />
   {/if}
   {#if output.isConstraintHintShown}
-    <OptionHint text={`Will be saved as .${props.actualExtension} due to format constraints`} />
+    <OptionHint text={t("Will be saved as .{extension} due to format constraints", { extension: props.actualExtension })} />
   {/if}
 </div>
 

@@ -1,6 +1,7 @@
 import type { Choice } from "./choices";
 import { extractBaseCodec, isAudioMimeNativeForContainer } from "./container-specs";
 import { getFileExtension } from "./filename";
+import { tText } from "@/lib/i18n/i18n.svelte.ts";
 
 const MIME_AUDIO_AIFF = "audio/aiff";
 const MIME_VIDEO_AVI = "video/x-msvideo";
@@ -114,7 +115,8 @@ const FORMAT_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function getFormatDescription(extension: string) {
-  return FORMAT_DESCRIPTIONS[extension] ?? "";
+  const description = FORMAT_DESCRIPTIONS[extension];
+  return description ? tText(description) : "";
 }
 
 export const videoContainers = Object.keys(EXTENSION_TO_MIME.video);
@@ -136,8 +138,8 @@ export function listContainerChoices(kind: MediaKind): Choice[] {
   return supportedExtensions[kind].map(extension => extension === AUTO_EXTENSION
     ? {
       value: extension,
-      label: AUTO_EXTENSION_LABEL,
-      description: AUTO_EXTENSION_DESCRIPTIONS[kind]
+      label: tText(AUTO_EXTENSION_LABEL),
+      description: tText(AUTO_EXTENSION_DESCRIPTIONS[kind])
     }
     : {
       value: extension,

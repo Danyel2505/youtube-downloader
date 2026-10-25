@@ -2,6 +2,7 @@
   import type { createPlaylistActionButtons } from "./PlaylistDownloader.action-buttons.svelte";
   import type { createPlaylistDownloaderState } from "./PlaylistDownloader.state.svelte";
   import PlaylistDownloaderSelectRow from "./PlaylistDownloaderSelectRow.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { applyPolymerCustomStyles, PAPER_PROGRESS_THEME } from "@/lib/ui/polymer-utils";
 
   interface Props {
@@ -20,28 +21,34 @@
 
   const progressAriaLabel = $derived.by(() => {
     if (playlist.isRevealingAll) {
-      return `Loading playlist: ${playlist.revealedVideoCount} videos found`;
+      return t("Loading playlist: {count} videos found", { count: playlist.revealedVideoCount });
     }
 
     if (playlist.isDownloading) {
-      return `Downloading ${playlist.downloadedCount} of ${playlist.totalCount} videos`;
+      return t("Downloading {done} of {total} videos", {
+        done: playlist.downloadedCount,
+        total: playlist.totalCount
+      });
     }
 
     const count = playlist.activeIndividualDownloadCount;
-    return `Downloading ${count} video${count === 1 ? "" : "s"}`;
+    return t(count === 1 ? "Downloading {count} video" : "Downloading {count} videos", { count });
   });
 
   const progressAriaValueText = $derived.by(() => {
     if (playlist.isRevealingAll) {
-      return `${playlist.revealedVideoCount} videos found`;
+      return t("{count} videos found", { count: playlist.revealedVideoCount });
     }
 
     if (playlist.isDownloading) {
-      return `${playlist.downloadedCount} of ${playlist.totalCount} complete`;
+      return t("{done} of {total} complete", {
+        done: playlist.downloadedCount,
+        total: playlist.totalCount
+      });
     }
 
     const count = playlist.activeIndividualDownloadCount;
-    return `${count} video${count === 1 ? "" : "s"} in progress`;
+    return t(count === 1 ? "{count} video in progress" : "{count} videos in progress", { count });
   });
 
   const isActiveBatchDownload = $derived(playlist.isDownloading && playlist.totalCount > 0);
@@ -81,8 +88,9 @@
 {#if playlist.nonDownloadableCount > 0}
   <p class="ytdl-restriction-notice" role="status">
     <span class="ytdl-restriction-icon" aria-hidden="true">i</span>
-    {playlist.nonDownloadableCount} video{playlist.nonDownloadableCount === 1 ? "" : "s"} not downloadable
-    (private or restricted)
+    {playlist.nonDownloadableCount === 1
+      ? t("{count} video not downloadable (private or restricted)", { count: playlist.nonDownloadableCount })
+      : t("{count} videos not downloadable (private or restricted)", { count: playlist.nonDownloadableCount })}
   </p>
 {/if}
 

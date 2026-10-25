@@ -1,6 +1,7 @@
 <script lang="ts">
   import { isRecentFromCurrentTab } from "../youtube-tab";
   import RecentDownloadItem from "./RecentDownloadItem.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import type { RecentDownloadEntry } from "@/types";
 
   interface Props {
@@ -29,7 +30,7 @@
 
 {#if otherRecent.length > 0}
   <section class="recent-section" aria-labelledby="recent-section-heading">
-    <h2 id="recent-section-heading" class="recent-section-heading">Recent</h2>
+    <h2 id="recent-section-heading" class="recent-section-heading">{t("Recent")}</h2>
     <ul class="recent-list">
       {#each otherRecent as entry (entry.id)}
         <li>

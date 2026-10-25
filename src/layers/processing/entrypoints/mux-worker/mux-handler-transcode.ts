@@ -26,6 +26,7 @@ export function handleTranscodeAudio(job: TranscodeAudioJob) {
 
   state.progressOffset = 0;
   state.progressScale = 1;
+  state.progressStage = undefined;
 
   state.ffmpeg!.FS.writeFile(inputFilename, new Uint8Array(audioData));
 
@@ -106,6 +107,7 @@ export async function handleTranscodeFile(job: TranscodeFileJob) {
 
   state.progressOffset = 0;
   state.progressScale = 1;
+  state.progressStage = undefined;
 
   state.ffmpeg!.FS.writeFile(sourceFilename, new Uint8Array(data));
 

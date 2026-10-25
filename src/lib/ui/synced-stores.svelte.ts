@@ -1,3 +1,4 @@
+import { setLanguage } from "@/lib/i18n/i18n.svelte.ts";
 import {
   createMapMessenger,
   createSignalMessenger,
@@ -11,6 +12,7 @@ export const CONTENT_OPTIONS = $state<Options>(INITIAL_OPTIONS);
 
 export function initContentOptions(options: Options) {
   Object.assign(CONTENT_OPTIONS, options);
+  setLanguage(options.language);
 }
 
 export const sabrCredentials = createSyncedSignal({

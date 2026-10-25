@@ -4,14 +4,20 @@
   import playArrowIcon from "../icons/play-arrow.svg?raw";
   import ThumbnailDuration from "../shared/ThumbnailDuration.svelte";
   import WavyProgress from "../shared/WavyProgress.svelte";
+  import { VideoStartState } from "./active-downloads-helpers";
   import { focusOrOpenTab } from "./youtube-tab";
+  import { getLocale, t } from "@/lib/i18n/i18n.svelte.ts";
+  import { formatPercent } from "@/lib/youtube/progress-label";
   import { resolveDisplayThumbnailUrl } from "@/lib/youtube/thumbnail-url";
+  import { ProgressStage } from "@/types";
 
   interface Props {
     filename: string;
     progress: number | null;
     progressLabel: string;
-    statusLabel?: string | null;
+    isProcessing: boolean;
+    stage?: ProgressStage;
+    startState?: VideoStartState | null;
     quality?: string;
     videoId?: string;
     title?: string;
@@ -28,7 +34,7 @@
   }
 
   const {
-    filename, progress, progressLabel, statusLabel, quality, videoId,
+    filename, progress, progressLabel, isProcessing, stage, startState, quality, videoId,
     title, channel, lengthSeconds, thumbnailUrl, downloadedBytes, totalBytes, bytesPerSecond,
     sourceUrl, tabId, showTabActions = false, oncancel
   }: Props = $props();
@@ -49,23 +55,32 @@
   const displayTitle = $derived(title ?? stripExtension(filename));
   const container = $derived(deriveContainer(filename));
 
-  const isProcessing = $derived(
-    (progress !== null && progressLabel.includes("processed"))
-    || statusLabel === "Processing…"
-    || statusLabel === "Waiting for FFmpeg…"
+  const isStarting = $derived(
+    progress === null
+    && (startState === VideoStartState.Starting || startState === VideoStartState.WaitingForFFmpeg)
   );
-  const isQueued = $derived(progress === null && statusLabel === "Downloading");
+  const isQueued = $derived(progress === null && startState === VideoStartState.Queued);
+  // Converting to H.265 reports real progress, so it gets a bar that fills instead of a spinner
+  const isConverting = $derived(stage === ProgressStage.Extracting || stage === ProgressStage.Reencoding);
+  const isIndeterminate = $derived((isProcessing || isStarting) && !(isConverting && progress !== null));
   const hasByteReadout = $derived(
     !isProcessing
     && downloadedBytes !== undefined
     && downloadedBytes > 0
   );
+  const indeterminateStatus = $derived.by(() => {
+    if (startState === VideoStartState.WaitingForFFmpeg) {
+      return t("Waiting for FFmpeg to start");
+    }
 
-  const NF_PERCENT = new Intl.NumberFormat(undefined, {
-    style: "percent",
-    maximumFractionDigits: 0
+    if (isStarting) {
+      return t("Getting the download ready");
+    }
+
+    return stage ? progressLabel : t("Merging video, audio tracks & captions");
   });
-  const percentLabel = $derived(progress !== null ? NF_PERCENT.format(progress) : "");
+
+  const percentLabel = $derived(progress !== null ? formatPercent(progress) : "");
 
   const canShowTabAction = $derived(showTabActions && Boolean(sourceUrl || videoId));
   const hasByline = $derived(Boolean(channel) || canShowTabAction);
@@ -89,7 +104,7 @@
   }
 
   function formatBytes(bytes: number, maximumFractionDigits: number): string {
-    const formatter = new Intl.NumberFormat(undefined, {
+    const formatter = new Intl.NumberFormat(getLocale(), {
       minimumFractionDigits: maximumFractionDigits === 2 ? 2 : 0,
       maximumFractionDigits
     });
@@ -108,19 +123,18 @@
     return `${bytes} B`;
   }
 
-  const NF_SPEED_MB = new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1
-  });
-  const NF_SPEED_INT = new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: 0
-  });
-
   function formatSpeed(bytesPerSec: number): string {
     if (bytesPerSec < 1) {
       return "";
     }
 
+    const NF_SPEED_MB = new Intl.NumberFormat(getLocale(), {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    });
+    const NF_SPEED_INT = new Intl.NumberFormat(getLocale(), {
+      maximumFractionDigits: 0
+    });
     if (bytesPerSec >= BYTES_PER_MB) {
       return `${NF_SPEED_MB.format(bytesPerSec / BYTES_PER_MB)} MB/s`;
     }
@@ -172,7 +186,7 @@
     {#if canShowTabAction}
       <button
         class="dl-thumb-wrap dl-thumb-wrap-button"
-        aria-label="Open {displayTitle} in source tab"
+        aria-label={t("Open {title} in source tab", { title: displayTitle })}
         onclick={focusSourceTab}
         type="button"
       >
@@ -231,7 +245,7 @@
             <span class="dl-byline-sep">·</span>
           {/if}
           {#if canShowTabAction}
-            <button class="dl-watch-link" onclick={focusSourceTab} type="button">Watch tab</button>
+            <button class="dl-watch-link" onclick={focusSourceTab} type="button">{t("Watch tab")}</button>
           {/if}
         </span>
       {/if}
@@ -249,8 +263,8 @@
       {#if canShowTabAction}
         <button
           class="dl-action"
-          aria-label="Open source tab"
-          data-tooltip="Open source tab"
+          aria-label={t("Open source tab")}
+          data-tooltip={t("Open source tab")}
           data-tooltip-align="end"
           onclick={focusSourceTab}
           type="button"
@@ -260,8 +274,8 @@
       {/if}
       <button
         class="dl-action dl-cancel"
-        aria-label="Cancel download of {displayTitle}"
-        data-tooltip="Cancel download"
+        aria-label={t("Cancel download of {title}", { title: displayTitle })}
+        data-tooltip={t("Cancel download")}
         data-tooltip-align="end"
         onclick={oncancel}
         type="button"
@@ -271,21 +285,21 @@
     </div>
   </div>
 
-  {#if isProcessing}
+  {#if isIndeterminate}
     <div class="dl-prog-bar">
       <WavyProgress indeterminate />
     </div>
     <div class="dl-prog-line">
       <span class="state-pill state-processing">
         <span class="state-spinner" aria-hidden="true"></span>
-        Processing
+        {isStarting ? t("Preparing") : t("Processing")}
       </span>
-      <span class="dl-prog-stat">Merging video, audio tracks &amp; captions</span>
+      <span class="dl-prog-stat">{indeterminateStatus}</span>
     </div>
   {:else if isQueued}
     <div class="dl-prog-line">
-      <span class="state-pill state-queued">Queued</span>
-      <span class="dl-prog-stat">Waiting for a free slot</span>
+      <span class="state-pill state-queued">{t("Queued")}</span>
+      <span class="dl-prog-stat">{t("Waiting for a free slot")}</span>
     </div>
   {:else if progress !== null}
     <div class="dl-prog-bar">
@@ -294,7 +308,7 @@
     <div class="dl-prog-line">
       <span class="dl-prog-pct">{percentLabel}</span>
       {#if hasByteReadout && byteReadoutParts.length > 0}
-        <span class="dl-prog-stat">{byteReadoutParts.join(" · ")}</span>
+        <span class="dl-prog-stat">{[progressLabel, ...byteReadoutParts].join(" · ")}</span>
       {:else}
         <span class="dl-prog-stat">{progressLabel}</span>
       {/if}

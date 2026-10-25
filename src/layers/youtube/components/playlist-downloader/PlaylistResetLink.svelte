@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   interface Props {
     isVisible: boolean;
     isDisabled: boolean;
@@ -21,7 +22,7 @@
     {onclick}
     type="button"
   >
-    Reset to my defaults
+    {t("Reset to my defaults")}
   </button>
 </p>
 

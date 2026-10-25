@@ -7,6 +7,39 @@ import { AUTO_DUB_TRACK_SUFFIX } from "@/lib/youtube/download-plan";
 import { formatAudioQualityLabel, formatVideoQualityLabel } from "@/lib/youtube/video-helpers";
 import { DownloadType, type AdaptiveFormatItem, type CodecPreferences, type VideoData } from "@/types";
 
+type MultiTrackParams = {
+  selectedAudioFormat: AdaptiveFormatItem | null;
+  getVideoData: () => VideoData;
+  downloadExtras: boolean;
+};
+function isMultiTrackDownload({ selectedAudioFormat, getVideoData, downloadExtras }: MultiTrackParams) {
+  const selectedTrackId = selectedAudioFormat?.audioTrack?.id;
+  const isTrackWithExtras = selectedTrackId && downloadExtras;
+  if (!isTrackWithExtras) {
+    return false;
+  }
+
+  const isSelectedAutoDubbed = selectedTrackId.endsWith(AUTO_DUB_TRACK_SUFFIX);
+  const isAutoDubbingBlockedForSelected = !CONTENT_OPTIONS.includeAutoDubbing && isSelectedAutoDubbed;
+  return !isAutoDubbingBlockedForSelected
+    && getVideoData().audioFormats.some(format => {
+      const trackId = format.audioTrack?.id;
+      return trackId
+        && trackId !== selectedTrackId
+        && (CONTENT_OPTIONS.includeAutoDubbing || !trackId.endsWith(AUTO_DUB_TRACK_SUFFIX))
+        && isAudioTrackInLanguages({
+          trackId,
+          languages: CONTENT_OPTIONS.audioLanguages
+        });
+    });
+}
+
+// The container the codec menus are measured against: what the user picked, so the menus don't
+// shrink or grow when a picked codec makes the download switch to MKV
+export function resolveMenuExtension({ extension, ...multiTrackParams }: MultiTrackParams & { extension: string }) {
+  return isMultiTrackDownload(multiTrackParams) ? resolveMultiTrackExtension(extension) : extension;
+}
+
 export function resolveActualExtension({
   downloadType,
   selectedVideoFormat,
@@ -37,28 +70,12 @@ export function resolveActualExtension({
     codecPreferences
   });
 
-  const selectedTrackId = selectedAudioFormat.audioTrack?.id;
-  const isTrackWithExtras = selectedTrackId && downloadExtras;
-  if (isTrackWithExtras) {
-    const isSelectedAutoDubbed = selectedTrackId.endsWith(AUTO_DUB_TRACK_SUFFIX);
-    const isAutoDubbingBlockedForSelected = !CONTENT_OPTIONS.includeAutoDubbing && isSelectedAutoDubbed;
-    const isExtraAudioTracksPresent = !isAutoDubbingBlockedForSelected
-      && getVideoData().audioFormats.some(format => {
-        const trackId = format.audioTrack?.id;
-        return trackId
-          && trackId !== selectedTrackId
-          && (CONTENT_OPTIONS.includeAutoDubbing || !trackId.endsWith(AUTO_DUB_TRACK_SUFFIX))
-          && isAudioTrackInLanguages({
-            trackId,
-            languages: CONTENT_OPTIONS.audioLanguages
-          });
-      });
-    if (isExtraAudioTracksPresent) {
-      return resolveMultiTrackExtension(baseExtension);
-    }
-  }
-
-  return baseExtension;
+  const isMultiTrack = isMultiTrackDownload({
+    selectedAudioFormat,
+    getVideoData,
+    downloadExtras
+  });
+  return isMultiTrack ? resolveMultiTrackExtension(baseExtension) : baseExtension;
 }
 
 export function resolvePrimaryState({

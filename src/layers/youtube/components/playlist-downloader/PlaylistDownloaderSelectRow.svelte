@@ -2,6 +2,7 @@
   import type { createPlaylistActionButtons } from "./PlaylistDownloader.action-buttons.svelte";
   import type { createPlaylistDownloaderState } from "./PlaylistDownloader.state.svelte";
   import PlaylistScrollSyncToggle from "./PlaylistScrollSyncToggle.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
 
   interface Props {
     playlist: ReturnType<typeof createPlaylistDownloaderState>;
@@ -12,7 +13,7 @@
 
   const isSomeSelected = $derived(playlist.selectedDownloadableVideos.length > 0);
   const isIndeterminate = $derived(isSomeSelected && !playlist.isAllSelected);
-  const selectAllLabel = $derived(playlist.isAllSelected ? "Deselect all" : "Select all loaded");
+  const selectAllLabel = $derived(playlist.isAllSelected ? t("Deselect all") : t("Select all loaded"));
   const isNoVideosAvailable = $derived(playlist.downloadableVideos.length === 0);
   const isSelectAllDisabled = $derived(isNoVideosAvailable || playlist.isDownloading);
 
@@ -67,14 +68,16 @@
 </div>
 
 <span class="ytdl-selection-count" aria-live="polite">
-  {playlist.selectedDownloadableVideos.length} of {playlist.downloadableVideos.length}
-  video{playlist.downloadableVideos.length === 1 ? "" : "s"} selected
+  {t(playlist.downloadableVideos.length === 1 ? "{selected} of {total} video selected" : "{selected} of {total} videos selected", {
+    selected: playlist.selectedDownloadableVideos.length,
+    total: playlist.downloadableVideos.length
+  })}
 </span>
 
 <yt-button-view-model {@attach actionButtons.attachDownload}></yt-button-view-model>
 
 <div class="ytdl-or-divider" aria-hidden="true">
-  <span>or</span>
+  <span>{t("or")}</span>
 </div>
 
 <yt-button-view-model {@attach actionButtons.attachDownloadAll}></yt-button-view-model>

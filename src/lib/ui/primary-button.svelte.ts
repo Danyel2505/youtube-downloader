@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { sendButtonData } from "@/lib/ui/polymer-utils";
 import {
   ButtonSize,
@@ -43,8 +44,8 @@ export function attachPrimaryButton(
       if (isDownloading) {
         return {
           iconName: "",
-          title: "Cancel",
-          accessibilityText: "Cancel",
+          title: t("Cancel"),
+          accessibilityText: t("Cancel"),
           style: ButtonStyle.Mono,
           type: ButtonType.Outline,
           buttonSize: ButtonSize.Default,
@@ -59,8 +60,8 @@ export function attachPrimaryButton(
       if (isInterrupted) {
         return {
           iconName: IconName.Download,
-          title: "Resume now",
-          accessibilityText: "Resume now",
+          title: t("Resume now"),
+          accessibilityText: t("Resume now"),
           style: ButtonStyle.CallToAction,
           type: ButtonType.Tonal,
           buttonSize: ButtonSize.Default,
@@ -75,8 +76,8 @@ export function attachPrimaryButton(
       if (isFailed) {
         return {
           iconName: IconName.Download,
-          title: "Retry download",
-          accessibilityText: "Retry download",
+          title: t("Retry download"),
+          accessibilityText: t("Retry download"),
           style: ButtonStyle.Mono,
           type: ButtonType.Filled,
           buttonSize: ButtonSize.Default,
@@ -88,7 +89,7 @@ export function attachPrimaryButton(
       }
 
       const sizeLabel = getEstimatedSizeLabel();
-      const baseTitle = state === PrimaryButtonState.Done ? "Download again" : "Download";
+      const baseTitle = state === PrimaryButtonState.Done ? t("Download again") : t("Download");
       const title = sizeLabel ? `${baseTitle}  ·  ${sizeLabel}` : baseTitle;
       return {
         iconName: IconName.Download,

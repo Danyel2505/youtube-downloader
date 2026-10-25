@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import type { PrimaryButtonState } from "@/lib/ui/primary-button.svelte.ts";
   import DownloadProgressRing from "#youtube/components/download-button/DownloadProgressRing.svelte";
   import type { Snippet } from "svelte";
@@ -58,7 +59,7 @@
       <yt-button-view-model {@attach attachChevronButton}></yt-button-view-model>
     </div>
   {:else}
-    <div class="ytdl-spinner-container" aria-busy="true" aria-label="Loading video info">
+    <div class="ytdl-spinner-container" aria-busy="true" aria-label={t("Loading video info")}>
       <tp-yt-paper-spinner-lite active></tp-yt-paper-spinner-lite>
     </div>
   {/if}

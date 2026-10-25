@@ -4,38 +4,39 @@
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsRadioGroup from "../ui/SettingsRadioGroup.svelte";
   import SettingsSwitchRow from "../ui/SettingsSwitchRow.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
   import { PlaylistDownloadMode, PlaylistOutputMode } from "@/types";
 
   const { options }: SettingsProps = $props();
 
-  const downloadModeOptions = [
+  const downloadModeOptions = $derived([
     {
       value: PlaylistDownloadMode.Fast,
-      label: "In parallel"
+      label: t("In parallel")
     },
     {
       value: PlaylistDownloadMode.DataSaver,
-      label: "One at a time"
+      label: t("One at a time")
     }
-  ] as const;
+  ] as const);
 
-  const outputModeOptions = [
+  const outputModeOptions = $derived([
     {
       value: PlaylistOutputMode.Individual,
-      label: "Separate files"
+      label: t("Separate files")
     },
     {
       value: PlaylistOutputMode.Zip,
-      label: "Single ZIP"
+      label: t("Single ZIP")
     }
-  ] as const;
+  ] as const);
 </script>
 
-<SettingsGroup title="Playlist">
+<SettingsGroup title={t("Playlist")}>
   <SettingsRadioGroup
     name="playlist-download-mode"
-    legend="Download speed"
+    legend={t("Download speed")}
     onchange={value => {
       void setOption({
         key: "playlistDownloadMode",
@@ -47,7 +48,7 @@
   />
   <SettingsRadioGroup
     name="playlist-output-mode"
-    legend="Output - video playlists"
+    legend={t("Output - video playlists")}
     onchange={value => {
       void setOption({
         key: "playlistOutputMode",
@@ -59,7 +60,7 @@
   />
   <SettingsRadioGroup
     name="playlist-audio-output-mode"
-    legend="Output - audio playlists"
+    legend={t("Output - audio playlists")}
     onchange={value => {
       void setOption({
         key: "playlistAudioOutputMode",
@@ -72,7 +73,7 @@
   <SettingsSwitchRow
     icon={expandVerticalIcon}
     isChecked={options.isPlaylistScrollSyncEnabled}
-    label="Scroll to each video while downloading"
+    label={t("Scroll to each video while downloading")}
     onchange={isChecked => {
       void setOption({
         key: "isPlaylistScrollSyncEnabled",

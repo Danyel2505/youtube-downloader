@@ -13,6 +13,7 @@
   import { createOutputSelectState } from "@/lib/download-options/output-select.svelte.ts";
   import type { PanelHost } from "@/lib/download-options/panel-host";
   import { createTrackSelectState } from "@/lib/download-options/track-select.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { getCompatibleFilename } from "@/lib/utils/containers";
   import type { AdaptiveFormatItem, VideoData } from "@/types";
   import { untrack } from "svelte";
@@ -29,7 +30,7 @@
     downloadType: panel.downloadType,
     videoFormats: props.videoData.videoFormats,
     videoFormatVariants: props.videoData.videoFormatVariants,
-    actualExtension: panel.actualExtension,
+    menuExtension: panel.menuExtension,
     codecPreferences: panel.codecPreferences,
     audioFormats: props.videoData.audioFormats,
     captionTracks: props.videoData.captionTracks,
@@ -94,20 +95,20 @@
   <div class="options-grid">
     <OptionSelect
       choices={DOWNLOAD_TYPES}
-      label="Type"
+      label={t("Type")}
       onchange={panel.handleDownloadTypeChange}
       value={panel.downloadType}
     />
     <OptionSelect
       choices={options.qualityOptions}
-      label="Quality"
+      label={t("Quality")}
       onchange={valueString => changeQuality(valueString, options.isAudio)}
       value={options.qualityValue}
     />
     {#if options.videoCodecOptions.length > 0}
       <OptionSelect
         choices={options.videoCodecOptions}
-        label="Video codec"
+        label={t("Video codec")}
         onchange={valueString => changeQuality(valueString, false)}
         value={options.videoCodecValue}
       />
@@ -115,7 +116,7 @@
     {#if options.audioCodecOptions.length > 0}
       <OptionSelect
         choices={options.audioCodecOptions}
-        label="Audio quality"
+        label={t("Audio quality")}
         onchange={valueString => {
           const format = findAudioFormatByValue({
             audioFormats: props.videoData.audioFormats,
@@ -135,13 +136,13 @@
       {#if tracks.isAudioTrackSelectorPresent}
         <OptionSelect
           choices={tracks.audioOptions}
-          label="Audio language"
+          label={t("Audio language")}
           onchange={tracks.handleAudioChange}
           value={tracks.audioSelectValue}
         />
         {#if tracks.isExtrasToggleShown}
           <label class="options-toggle">
-            Include all audio tracks
+            {t("Include all audio tracks")}
             <SettingsSwitch
               isChecked={options.downloadExtras}
               isDisabled={tracks.isExtensionMultiTrackIncompatible}
@@ -149,20 +150,20 @@
             />
           </label>
           {#if options.isExtrasAutoDisabled}
-            <p class="options-error">{panel.extension.toUpperCase()} doesn't support multiple audio tracks</p>
+            <p class="options-error">{t("{format} doesn't support multiple audio tracks", { format: panel.extension.toUpperCase() })}</p>
           {/if}
         {/if}
       {/if}
       {#if tracks.isCaptionSelectorPresent}
         <OptionSelect
           choices={tracks.captionOptions}
-          label="Captions"
+          label={t("Captions")}
           onchange={tracks.handleCaptionChange}
           value={tracks.captionSelectValue}
         />
         {#if tracks.isExtraCaptionsToggleShown}
           <label class="options-toggle">
-            Include all captions
+            {t("Include all captions")}
             <SettingsSwitch isChecked={options.downloadExtraCaptions} onchange={options.setDownloadExtraCaptions} />
           </label>
         {/if}
@@ -172,7 +173,7 @@
 
   <div class="options-group">
     <div class="options-output">
-      <OptionField hint={output.filenameError} isHintError label="Filename">
+      <OptionField hint={output.filenameError} isHintError label={t("Filename")}>
         <input
           aria-invalid={!output.isFilenameValid}
           autocomplete="off"
@@ -184,7 +185,7 @@
       </OptionField>
       <OptionSelect
         choices={output.formatOptions}
-        label="Format"
+        label={t("Format")}
         onchange={extension => {
           options.guardExtrasForExtension(extension);
           panel.extension = extension;
@@ -196,7 +197,7 @@
       <p class="options-hint">{output.formatDescription}</p>
     {/if}
     {#if output.isConstraintHintShown}
-      <p class="options-hint">Will be saved as .{panel.actualExtension} due to format constraints</p>
+      <p class="options-hint">{t("Will be saved as .{actualExtension} due to format constraints", { actualExtension: panel.actualExtension })}</p>
     {/if}
   </div>
 
@@ -209,7 +210,7 @@
       type="button"
     >
       {@html downloadIcon}
-      Download
+      {t("Download")}
     </button>
   </div>
 </div>

@@ -4,6 +4,7 @@
   import videoIcon from "../icons/video.svg?raw";
   import { buildAvailableTargetGroups, isAudioSourceEntry, submitTranscode } from "./change-format-helpers";
   import FormatGrid from "./FormatGrid.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import type { FormatGroup, FormatItem } from "@/lib/utils/containers";
   import { FORMAT_GROUP_AUDIO, FORMAT_GROUP_VIDEO } from "@/lib/utils/containers";
   import { createLogger, LogScope } from "@/lib/utils/logger";
@@ -145,12 +146,12 @@
         <img class="dialog-thumbnail" alt="" src={displayThumbnailUrl} />
       {/if}
       <div class="dialog-heading">
-        <h2 id="change-format-title" class="dialog-title">Change format</h2>
+        <h2 id="change-format-title" class="dialog-title">{t("Change format")}</h2>
         <span class="dialog-video-title" dir="auto">{entry.title}</span>
       </div>
       <button
         class="dialog-close"
-        aria-label="Close"
+        aria-label={t("Close")}
         onclick={startClose}
         type="button"
       >
@@ -168,7 +169,7 @@
           type="button"
         >
           <span class="mode-icon" aria-hidden="true">{@html videoIcon}</span>
-          Video
+          {t("Video")}
         </button>
         <button
           class="mode-btn"
@@ -179,7 +180,7 @@
           type="button"
         >
           <span class="mode-icon" aria-hidden="true">{@html audioIcon}</span>
-          Extract audio
+          {t("Extract audio")}
         </button>
       </div>
     {/if}
@@ -187,11 +188,11 @@
     {#if activeItems.length > 0}
       <p class="dialog-description">
         {#if mode === DialogMode.Video}
-          <strong>Instant</strong> just repackages the file.
-          Others re-encode the video — <strong>Slower</strong>
-          targets use a legacy codec and take noticeably longer
+          <strong>{t("Instant")}</strong> {t("just repackages the file. Others re-encode the video -")}
+          <strong>{t("Slower")}</strong>
+          {t("targets use a legacy codec and take noticeably longer")}
         {:else}
-          <strong>Instant</strong> just repackages the file. Others re-encode the audio
+          <strong>{t("Instant")}</strong> {t("just repackages the file. Others re-encode the audio")}
         {/if}
       </p>
     {/if}
@@ -201,7 +202,7 @@
     {#key mode}
       <div class="mode-panel mode-panel--{mode}" class:mode-panel--switched={hasSwitchedMode}>
         {#if activeItems.length === 0}
-          <p class="dialog-empty">No alternative formats available</p>
+          <p class="dialog-empty">{t("No alternative formats available")}</p>
         {:else}
           <FormatGrid
             items={activeItems}

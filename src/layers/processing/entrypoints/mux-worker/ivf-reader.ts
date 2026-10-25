@@ -9,7 +9,8 @@ const IVF_WIDTH_OFFSET = 12;
 const IVF_HEIGHT_OFFSET = 14;
 const IVF_TIMEBASE_DENOMINATOR_OFFSET = 16;
 const IVF_TIMEBASE_NUMERATOR_OFFSET = 20;
-const IVF_FRAME_COUNT_OFFSET = 24;
+const IVF_DURATION_OFFSET = 24;
+const IVF_UNKNOWN_DURATION = 0xFFFFFFFF;
 const IVF_HEADER_LENGTH_OFFSET = 6;
 const FRAME_PTS_OFFSET = 4;
 const READ_BLOCK_BYTES = 4 * 1024 * 1024;
@@ -19,9 +20,7 @@ export type IvfHeader = Prettify<{
   fourcc: string;
   width: number;
   height: number;
-  frameCount: number;
-  timebaseDenominator: number;
-  timebaseNumerator: number;
+  durationMicroseconds: number;
 }>;
 
 export type IvfFrame = Prettify<{
@@ -86,15 +85,19 @@ export async function openIvf(file: File) {
     await reader.read(extraHeaderBytes);
   }
 
+  const timebaseDenominator = view.getUint32(IVF_TIMEBASE_DENOMINATOR_OFFSET, true);
+  const timebaseNumerator = view.getUint32(IVF_TIMEBASE_NUMERATOR_OFFSET, true);
+  const secondsPerTick = timebaseDenominator > 0 ? timebaseNumerator / timebaseDenominator : 0;
+  // The field after the timebase holds the stream's length in timebase ticks, not a frame count
+  const durationTicks = view.getUint32(IVF_DURATION_OFFSET, true);
   const header: IvfHeader = {
     fourcc: readFourcc(headerBytes, IVF_FOURCC_OFFSET),
     width: view.getUint16(IVF_WIDTH_OFFSET, true),
     height: view.getUint16(IVF_HEIGHT_OFFSET, true),
-    frameCount: view.getUint32(IVF_FRAME_COUNT_OFFSET, true),
-    timebaseDenominator: view.getUint32(IVF_TIMEBASE_DENOMINATOR_OFFSET, true),
-    timebaseNumerator: view.getUint32(IVF_TIMEBASE_NUMERATOR_OFFSET, true)
+    durationMicroseconds: durationTicks === IVF_UNKNOWN_DURATION
+      ? 0
+      : Math.round(durationTicks * secondsPerTick * MICROSECONDS_PER_SECOND)
   };
-  const secondsPerTick = header.timebaseDenominator > 0 ? header.timebaseNumerator / header.timebaseDenominator : 0;
 
   async function* readFrames() {
     while (true) {

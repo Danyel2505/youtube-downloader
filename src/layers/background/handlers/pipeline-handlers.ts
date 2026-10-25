@@ -91,7 +91,7 @@ export function registerPipelineHandlers() {
   });
 
   onMessage(MessageType.PipelineProgress, async ({ data }) => {
-    const { videoId, progress, progressType, tabId } = data;
+    const { videoId, progress, progressType, stage, tabId } = data;
     if (isVideoCancelled(videoId)) {
       return;
     }
@@ -103,13 +103,17 @@ export function registerPipelineHandlers() {
           isDownloading: !isComplete,
           isDone: isComplete,
           progress,
-          progressType
+          progressType,
+          ...(stage && {
+            stage
+          })
         };
       },
       progressUpdate: {
         videoId,
         progress,
-        progressType
+        progressType,
+        stage
       },
       tabId
     });

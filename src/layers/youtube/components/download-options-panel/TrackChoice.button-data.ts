@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { sendButtonData } from "@/lib/ui/polymer-utils";
 import {
   ButtonSize,
@@ -13,17 +14,17 @@ export function buildTrackButtons(kind: TrackKind) {
   return [
     {
       id: `track-match-video-${kind}`,
-      label: "Match video",
+      label: t("Match video"),
       mode: PanelTrackMode.MatchVideo
     },
     {
       id: `track-original-${kind}`,
-      label: "Original",
+      label: t("Original"),
       mode: PanelTrackMode.Original
     },
     {
       id: `track-custom-${kind}`,
-      label: "Custom",
+      label: t("Custom"),
       mode: PanelTrackMode.Custom
     }
   ];

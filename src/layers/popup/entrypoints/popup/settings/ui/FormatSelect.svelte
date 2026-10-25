@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tText } from "@/lib/i18n/i18n.svelte.ts";
   import { AUTO_EXTENSION, AUTO_EXTENSION_LABEL } from "@/lib/utils/containers";
   import type { FormatItem } from "@/lib/utils/containers";
 
@@ -14,7 +15,7 @@
 
   function formatLabel(item: Pick<FormatItem, "extension" | "description">): string {
     if (item.extension === AUTO_EXTENSION) {
-      return AUTO_EXTENSION_LABEL;
+      return tText(AUTO_EXTENSION_LABEL);
     }
 
     return item.description ? `${item.extension} - ${item.description}` : item.extension;

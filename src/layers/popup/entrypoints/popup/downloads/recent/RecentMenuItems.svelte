@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   interface Props {
     isZip: boolean;
     onShowInFolder: () => void;
@@ -16,7 +17,7 @@
   role="menuitem"
   type="button"
 >
-  Show in folder
+  {t("Show in folder")}
 </button>
 {#if !isZip}
   <button
@@ -26,7 +27,7 @@
     role="menuitem"
     type="button"
   >
-    Change format…
+    {t("Change format…")}
   </button>
 {/if}
 <button
@@ -36,7 +37,7 @@
   role="menuitem"
   type="button"
 >
-  Remove
+  {t("Remove")}
 </button>
 
 <style>

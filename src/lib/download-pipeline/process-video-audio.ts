@@ -1,4 +1,10 @@
-import { toUint8Array, reportProgress, toOwnedArrayBuffer, buildRecentContext } from ".";
+import {
+  toUint8Array,
+  reportProgress,
+  toOwnedArrayBuffer,
+  buildRecentContext,
+  FFMPEG_PROGRESS_CAP
+} from ".";
 import { triggerDownloadFromFile } from "./blob-download";
 import {
   buildAdditionalAudioTracks,
@@ -10,7 +16,7 @@ import { runMuxVideoAudio } from "./ffmpeg-instance";
 import { OPFS_MUX_OUTPUT_SUFFIX } from "./opfs-constants";
 import { addToPlaylistBundle } from "./playlist-bundle";
 import { createLogger, LogScope } from "@/lib/utils/logger";
-import { ProgressType } from "@/types";
+import { ProgressStage, ProgressType } from "@/types";
 import type { Prettify, ProcessStreamData } from "@/types";
 
 const log = createLogger(LogScope.Pipeline);
@@ -126,6 +132,13 @@ export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudio
     return;
   }
 
+  await reportProgress({
+    videoId,
+    progress: FFMPEG_PROGRESS_CAP,
+    progressType: ProgressType.FFmpeg,
+    stage: ProgressStage.Saving,
+    tabId
+  });
   await triggerDownloadFromFile({
     file: outputFile,
     filenameOutput: downloadFilename,

@@ -2,6 +2,7 @@
   import { createButtonManager } from "./PlaylistGridItem.buttons.svelte";
   import { createPanelManager } from "./PlaylistGridItem.panel.svelte";
   import { createPlaylistGridItemState, PlaylistGridStatus } from "./PlaylistGridItem.state.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import GridItemButtonGroup from "#youtube/components/playlist-downloader/GridItemButtonGroup.svelte";
   import { untrack } from "svelte";
 
@@ -53,5 +54,5 @@
   {isIndeterminate}
   {isProgressRingVisible}
   progress={state.displayProgress / 100}
-  ringAriaLabel="Playlist download progress"
+  ringAriaLabel={t("Playlist download progress")}
 />

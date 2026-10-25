@@ -1,5 +1,6 @@
 import { buildDownloadTitle, buildDownloadTooltip, type ButtonViewState } from "./watch-button-format";
 import { WatchButtonLayout } from "./watch-button-types";
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import {
   ButtonIconPosition,
   ButtonSize,
@@ -61,14 +62,14 @@ export function buildChevronData(state: ButtonViewState, layout: WatchButtonLayo
   return {
     iconName: isPanelOpenAbove ? IconName.ExpandLess : IconName.ExpandMore,
     title: "",
-    accessibilityText: isPanelOpen ? "Close download options" : "Open download options",
+    accessibilityText: isPanelOpen ? t("Close download options") : t("Open download options"),
     style: ButtonStyle.Mono,
     type: ButtonType.Tonal,
     buttonSize: ButtonSize.Default,
     state: isDisabled ? ButtonState.Disabled : ButtonState.Active,
     isFullWidth: false,
     isDisabled,
-    tooltip: isPanelOpen ? "Close download options" : "Download options",
+    tooltip: isPanelOpen ? t("Close download options") : t("Download options"),
     ...layout === WatchButtonLayout.Shorts && SHORTS_CHEVRON_SHAPE
   } satisfies ButtonViewModelData;
 }

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { MULTI_TRACK_UNSUPPORTED_EXTENSIONS } from "@/lib/utils/containers";
 import { DownloadType, PanelTrackMode } from "@/types";
 import type { CaptionTrack, LabeledOption } from "@/types";
@@ -83,18 +84,18 @@ export function createTrackSelectState(props: () => TrackSelectProps) {
     ...moveToFront(props().uniqueAudioLanguages, language => language.value === originalAudioLangCode)
       .map(language => ({
         value: language.value,
-        label: language.value === originalAudioLangCode ? `${language.label} · Original` : language.label
+        label: language.value === originalAudioLangCode ? `${language.label} · ${t("Original")}` : language.label
       }))
   ]);
 
   const captionOptions = $derived([
     ...(isSingleCaptionOption ? [] : [{
       value: CAPTION_AUTO,
-      label: props().captionPlayerLabel ? `Auto · ${props().captionPlayerLabel}` : "Auto"
+      label: props().captionPlayerLabel ? `${t("Auto")} · ${props().captionPlayerLabel}` : t("Auto")
     }]),
     {
       value: CAPTION_OFF,
-      label: "No captions"
+      label: t("No captions")
     },
     ...moveToFront(props().captionCustomOptions, option => option.label === props().captionOriginalLabel)
   ]);
@@ -105,11 +106,11 @@ export function createTrackSelectState(props: () => TrackSelectProps) {
     }
 
     if (audioSelectValue === AUDIO_AUTO) {
-      return "Audio: matches player";
+      return t("Audio: matches player");
     }
 
     const label = props().uniqueAudioLanguages.find(language => language.value === audioSelectValue)?.label;
-    return label ? `Audio: ${label}` : null;
+    return label ? t("Audio: {language}", { language: label }) : null;
   });
 
   const captionSummaryText = $derived.by(() => {
@@ -118,15 +119,15 @@ export function createTrackSelectState(props: () => TrackSelectProps) {
     }
 
     if (captionSelectValue === CAPTION_AUTO) {
-      return "Captions: matches player";
+      return t("Captions: matches player");
     }
 
     if (captionSelectValue === CAPTION_OFF) {
-      return "No captions";
+      return t("No captions");
     }
 
     const label = props().captionCustomOptions.find(option => option.value === captionSelectValue)?.label;
-    return label ? `Captions: ${label}` : null;
+    return label ? t("Captions: {language}", { language: label }) : null;
   });
 
   function handleAudioChange(value: string) {

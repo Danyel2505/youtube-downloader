@@ -1,6 +1,8 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { CONTENT_OPTIONS, type DownloadProgressState } from "@/lib/ui/synced-stores.svelte";
 import { resolveOutputExtensionForFormats } from "@/lib/youtube/align-formats-to-container";
 import { resolveAutoContainer } from "@/lib/youtube/auto-container";
+import { describeActivity, formatPercent } from "@/lib/youtube/progress-label";
 import { formatVideoQualityLabel } from "@/lib/youtube/video-helpers";
 import { ProgressType, type Prettify, type VideoData } from "@/types";
 
@@ -30,20 +32,20 @@ export function buildButtonTooltip({
   videoData
 }: ButtonTooltipParams) {
   if (isUnavailable) {
-    return "Video unavailable";
+    return t("Video unavailable");
   }
 
   const isComplete = isLocallyDone || isDone;
   if (isComplete) {
     if (isInBatch) {
-      return "Download completed";
+      return t("Download completed");
     }
 
-    return "Download again";
+    return t("Download again");
   }
 
   if (isDownloadFailed) {
-    return "Download failed - click to retry";
+    return t("Download failed - click to retry");
   }
 
   if (isDownloading) {
@@ -52,9 +54,12 @@ export function buildButtonTooltip({
       return buttonLabel;
     }
 
-    const isFfmpegPhase = downloadState.progressType === ProgressType.FFmpeg;
-    const activePhaseLabel = isFfmpegPhase ? "Processing" : "Downloading";
-    return `${Math.round(displayProgress)}% - ${activePhaseLabel}`;
+    const activity = describeActivity({
+      progressType: downloadState.progressType,
+      stage: downloadState.stage,
+      progress: downloadState.progress
+    });
+    return `${formatPercent(displayProgress / 100)} - ${activity}`;
   }
 
   if (!videoData?.isDownloadable) {

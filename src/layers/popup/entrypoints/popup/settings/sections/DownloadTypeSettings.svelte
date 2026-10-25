@@ -2,36 +2,37 @@
   import type { SettingsProps } from "../settings-props";
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsRadioGroup from "../ui/SettingsRadioGroup.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
   import { DownloadType } from "@/types";
 
   const { options }: SettingsProps = $props();
 
-  const downloadTypeOptions = [
+  const downloadTypeOptions = $derived([
     {
       value: DownloadType.Auto,
-      label: "Auto (video for videos, audio for music)"
+      label: t("Auto (video for videos, audio for music)")
     },
     {
       value: DownloadType.VideoAndAudio,
-      label: "Always video + audio"
+      label: t("Always video + audio")
     },
     {
       value: DownloadType.Video,
-      label: "Always video only"
+      label: t("Always video only")
     },
     {
       value: DownloadType.Audio,
-      label: "Always audio only"
+      label: t("Always audio only")
     }
-  ] as const;
+  ] as const);
 </script>
 
-<SettingsGroup title="Download type">
+<SettingsGroup title={t("Download type")}>
   <SettingsRadioGroup
     name="download-type"
     isLegendHidden
-    legend="Download type"
+    legend={t("Download type")}
     onchange={value => {
       void setOption({
         key: "defaultDownloadType",

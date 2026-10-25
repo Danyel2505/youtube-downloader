@@ -1,6 +1,7 @@
 <script lang="ts">
   import moreActionsIcon from "../../icons/more-actions.svg?raw";
   import RecentMenuItems from "./RecentMenuItems.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
 
   interface Props {
     entryId: string;
@@ -72,7 +73,7 @@
     class="recent-menu-trigger"
     aria-expanded={isMenuOpen}
     aria-haspopup="menu"
-    aria-label="More actions"
+    aria-label={t("More actions")}
     onclick={() => setMenuOpen(!isMenuOpen)}
     type="button"
   >

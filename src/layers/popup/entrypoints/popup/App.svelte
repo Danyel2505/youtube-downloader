@@ -5,6 +5,8 @@
   import SettingsTab from "./settings/SettingsTab.svelte";
   import TabNav from "./shared/TabNav.svelte";
   import UpdateBanner from "./shared/UpdateBanner.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
+  import { getLocale, setLanguage } from "@/lib/i18n/i18n.svelte.ts";
   import type { DownloadProgressEntry, Options, VideoDetail, VideoQueueItem } from "@/types";
   import { browser } from "#imports";
   import { onMount, untrack } from "svelte";
@@ -43,11 +45,6 @@
     }
   });
 
-  const percentFormatter = new Intl.NumberFormat(browser.i18n.getUILanguage(), {
-    style: "percent",
-    maximumFractionDigits: 0
-  });
-
   const appState = createAppState(
     untrack(() => ({
       initialIsFFmpegReady,
@@ -61,6 +58,11 @@
       initialOptions
     }))
   );
+
+  $effect(() => {
+    setLanguage(appState.options.language);
+    document.documentElement.lang = getLocale();
+  });
 
   const SLIDE_DURATION = 200;
   const PANEL_ORDER = [PopupPanel.Downloads, PopupPanel.Settings] as const;
@@ -93,7 +95,7 @@
     <div class="popup-header-top">
       <h1 class="popup-title">YouTube Downloader</h1>
       <span class="popup-credit">
-        by <a class="text-link" href="https://avi12.com" target="_blank">Avi</a>
+        {t("by")} <a class="text-link" href="https://avi12.com" target="_blank">Avi</a>
       </span>
     </div>
     <TabNav
@@ -133,7 +135,6 @@
           onRecentChanged={appState.refreshRecentDownloads}
           options={appState.options}
           pendingFormatChangeId={appState.pendingFormatChangeEntry?.id ?? null}
-          {percentFormatter}
           recentDownloads={appState.recentDownloads}
           statusProgress={appState.statusProgress}
           videoDetails={appState.videoDetails}

@@ -4,7 +4,7 @@ import { createWorkerPortReceiver } from "@/lib/download-pipeline/worker-port-re
 import type { WorkerPortReceiver } from "@/lib/download-pipeline/worker-port-receiver";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { ProgressType } from "@/types";
-import type { Prettify } from "@/types";
+import type { Prettify, ProgressStage } from "@/types";
 import type { FFmpegCoreModule } from "@ffmpeg/types";
 
 const log = createLogger(LogScope.Ffmpeg);
@@ -28,6 +28,7 @@ type MuxState = Prettify<{
   portReceiver: WorkerPortReceiver | null;
   progressOffset: number;
   progressScale: number;
+  progressStage: ProgressStage | undefined;
   currentVideoId: string;
   currentTabId: number;
   cancelledVideoIds: Set<string>;
@@ -38,6 +39,7 @@ export const state: MuxState = {
   portReceiver: null,
   progressOffset: 0,
   progressScale: 1,
+  progressStage: undefined,
   currentVideoId: "",
   currentTabId: 0,
   cancelledVideoIds: new Set()
@@ -80,6 +82,7 @@ export function reportFFmpegProgress(value: number) {
     videoId: state.currentVideoId,
     progress: Math.max(0, Math.min(value, 0.99)),
     progressType: ProgressType.FFmpeg,
+    stage: state.progressStage,
     tabId: state.currentTabId
   });
 }

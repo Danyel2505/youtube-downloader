@@ -12,6 +12,7 @@
   import DownloadOptionsPanelFooter from "./DownloadOptionsPanelFooter.svelte";
   import { PAGE_PANEL_HOST } from "./page-panel-host";
   import { createPanelState } from "@/lib/download-options/DownloadOptionsPanel.state.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import type { VideoData } from "@/types";
   import { attachCloseButton } from "#youtube/lib/ui/panel-button-attachments.svelte";
 
@@ -49,11 +50,11 @@
   tabindex="-1"
 >
   <div class="ytdl-panel-header">
-    <h2 id="ytdl-panel-title" class="ytdl-panel-title">Download options</h2>
+    <h2 id="ytdl-panel-title" class="ytdl-panel-title">{t("Download options")}</h2>
     <yt-button-view-model
       class={scopingClass}
       {@attach attachCloseButton}
-      aria-label="Close"
+      aria-label={t("Close")}
       data-ytdl-button-id={HEADER_CLOSE_BUTTON_ID}
       role="button"
       tabindex="0"
@@ -70,6 +71,7 @@
       extension={panel.extension}
       filename={panel.filename}
       isDownloading={panel.isDownloading}
+      menuExtension={panel.menuExtension}
       onaudiocustomchange={panel.audio.handlePanelAudioCustomChange}
       onaudioformatchange={format => (panel.selectedAudioFormat = format)}
       onaudiomodechange={panel.audio.handlePanelAudioModeChange}
@@ -94,6 +96,7 @@
 
   <DownloadOptionsPanelFooter
     displayProgress={panel.displayProgress}
+    downloadType={panel.downloadType}
     estimatedSizeLabel={panel.estimatedSizeLabel}
     getIsDownloadable={() => panel.isDownloadable}
     getIsFilenameValid={() => panel.isFilenameValid}
@@ -101,6 +104,7 @@
     primaryState={panel.primaryState}
     progressType={panel.progressType}
     {scopingClass}
+    stage={panel.stage}
     viewButtonId={VIEW_BUTTON_ID}
   />
 </div>

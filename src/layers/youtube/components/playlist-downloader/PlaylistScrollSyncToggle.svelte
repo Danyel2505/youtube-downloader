@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   interface Props {
     isEnabled: boolean;
     ontoggle: (isEnabled: boolean) => void;
@@ -17,8 +18,8 @@
       }
     }}
   >
-    <span class="ytdl-scroll-sync-label">Auto-scroll the playlist as videos download</span>
-    <span class="ytdl-scroll-sync-sub">Applies to both selected and whole-playlist downloads</span>
+    <span class="ytdl-scroll-sync-label">{t("Auto-scroll the playlist as videos download")}</span>
+    <span class="ytdl-scroll-sync-sub">{t("Applies to both selected and whole-playlist downloads")}</span>
   </tp-yt-paper-checkbox>
 </div>
 

@@ -20,6 +20,7 @@ export async function handleEmbedMetadata(job: EmbedMetadataJob) {
 
   state.progressOffset = 0;
   state.progressScale = 1;
+  state.progressStage = undefined;
 
   let coverFilename = "";
   let isCoverArtPresent = false;

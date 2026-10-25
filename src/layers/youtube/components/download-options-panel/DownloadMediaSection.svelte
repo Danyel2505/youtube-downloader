@@ -6,6 +6,7 @@
     findAudioFormatByValue,
     handleQualityChange
   } from "@/lib/download-options/download-options-helpers";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import type { Choice } from "@/lib/utils/choices";
   import { DownloadType } from "@/types";
   import type { AdaptiveFormatItem } from "@/types";
@@ -49,7 +50,7 @@
   <PolymerSelect
     id="type-select"
     disabled={isDownloading}
-    label="Type"
+    label={t("Type")}
     onchange={newValue => {
       const type = DOWNLOAD_TYPES.find(item => item.value === newValue);
       if (type) {
@@ -63,7 +64,7 @@
     id="quality-select"
     choices={qualityOptions}
     disabled={isDownloading}
-    label="Quality"
+    label={t("Quality")}
     onchange={valueString => handleQualityChange({
       valueString,
       isAudio,
@@ -79,7 +80,7 @@
       id="video-codec-select"
       choices={videoCodecOptions}
       disabled={isDownloading}
-      label="Video codec"
+      label={t("Video codec")}
       onchange={valueString => handleQualityChange({
         valueString,
         isAudio: false,
@@ -96,7 +97,7 @@
       id="audio-codec-select"
       choices={audioCodecOptions}
       disabled={isDownloading}
-      label="Audio quality"
+      label={t("Audio quality")}
       onchange={valueString => {
         const format = findAudioFormatByValue({
           audioFormats,

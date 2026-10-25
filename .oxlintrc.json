@@ -26,7 +26,7 @@
     "object-shorthand": ["error", "always", { "avoidExplicitReturnArrows": true }],
     "id-length": ["error", {
       "min": 3,
-      "exceptions": ["z", "_", "i", "fs", "id", "os", "e", "db", "mi", "ui", "HL", "GL", "js", "q", "to", "dd", "mm", "x", "y", "d", "T", "a", "fd", "n", "K", "V", "on", "gw", "hl", "gl", "FS"],
+      "exceptions": ["z", "_", "i", "fs", "id", "os", "e", "db", "mi", "ui", "HL", "GL", "js", "q", "to", "dd", "mm", "x", "y", "d", "T", "a", "fd", "n", "K", "V", "on", "gw", "hl", "gl", "FS", "t"],
       "properties": "never"
     }],
     "func-style": ["error", "declaration", { "allowArrowFunctions": false }],

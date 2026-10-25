@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { createPlaylistGridItemState } from "./PlaylistGridItem.state.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { onButtonClick } from "@/lib/messaging/cross-world-messenger";
   import {
     createFooterState,
@@ -74,7 +75,7 @@
       ></tp-yt-paper-progress>
       {#if isDone}
         <div class="ytdl-done-row">
-          <span class="ytdl-progress-label" role="status">Downloaded</span>
+          <span class="ytdl-progress-label" role="status">{t("Downloaded")}</span>
           {#if isViewButtonVisible}
             <yt-button-view-model
               class={scopingClass}
@@ -86,7 +87,7 @@
           {/if}
         </div>
       {:else if isFailed}
-        <span class="ytdl-progress-label" role="alert">Download failed</span>
+        <span class="ytdl-progress-label" role="alert">{t("Download failed")}</span>
       {:else}
         <span class="ytdl-progress-label" aria-live="polite">{footer.downloadingLabel}</span>
       {/if}

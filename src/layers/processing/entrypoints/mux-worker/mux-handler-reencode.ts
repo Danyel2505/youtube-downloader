@@ -9,6 +9,7 @@ import {
 import { createOpfsOutputFs } from "./opfs-output-fs";
 import { reencodeIvfToHevc } from "./reencode-hevc";
 import { OPFS_REENCODE_HEVC_SUFFIX, OPFS_REENCODE_IVF_SUFFIX } from "@/lib/download-pipeline/opfs-constants";
+import { ProgressStage } from "@/types";
 import type { Prettify, VideoReencodeSpec } from "@/types";
 
 const IVF_OUTPUT_FILENAME = "video.ivf";
@@ -72,6 +73,8 @@ async function demuxToIvf({ videoId, sourceFilename }: DemuxToIvfParams) {
 
   state.progressOffset = 0;
   state.progressScale = DEMUX_PROGRESS_SHARE;
+  state.progressStage = ProgressStage.Extracting;
+  reportFFmpegProgress(0);
   const { exitCode, outputBytes } = execIvfDemux({
     sourceFilename,
     mountDirectory,
@@ -112,6 +115,8 @@ export async function reencodeVideo({ videoId, sourceFilename, sourceMimeType, s
   const root = await navigator.storage.getDirectory();
   const hevcHandle = await root.getFileHandle(`${videoId}${OPFS_REENCODE_HEVC_SUFFIX}`, { create: true });
   const syncHandle = await hevcHandle.createSyncAccessHandle();
+  state.progressStage = ProgressStage.Reencoding;
+  reportFFmpegProgress(DEMUX_PROGRESS_SHARE);
   try {
     await reencodeIvfToHevc({
       ivfFile,

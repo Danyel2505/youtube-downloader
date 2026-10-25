@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { createPlaylistGridItemState } from "./PlaylistGridItem.state.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { onButtonClick } from "@/lib/messaging/cross-world-messenger";
   import { attachSettingsOptions, DATA_BUTTON_ID_ATTR, sendButtonData } from "@/lib/ui/polymer-utils";
   import { toInlineLabeledOption } from "@/lib/utils/choices";
@@ -25,26 +26,24 @@
   const OUTPUT_ID_PREFIX = "playlist-grid-output-";
   const OUTPUT_ID_INDIVIDUAL_SUFFIX = "-individual";
   const OUTPUT_ID_ZIP_SUFFIX = "-zip";
-  const OUTPUT_SETTINGS_TITLE = "Output";
-
-  const downloadTypeOptions = [
+  const downloadTypeOptions = $derived([
     {
       value: DownloadType.Auto,
-      label: "Auto (match each item)"
+      label: t("Auto (match each item)")
     },
     {
       value: DownloadType.VideoAndAudio,
-      label: "Video + audio"
+      label: t("Video + audio")
     },
     {
       value: DownloadType.Video,
-      label: "Video only"
+      label: t("Video only")
     },
     {
       value: DownloadType.Audio,
-      label: "Audio only"
+      label: t("Audio only")
     }
-  ];
+  ]);
 
   interface Props {
     playlistId: string;
@@ -61,20 +60,20 @@
     mode: PlaylistOutputMode;
   };
 
-  const outputButtons: OutputButton[] = [
+  const outputButtons: OutputButton[] = $derived([
     {
       id: `${OUTPUT_ID_PREFIX}${initialPlaylistId}${OUTPUT_ID_INDIVIDUAL_SUFFIX}`,
-      label: "Separate files",
-      tooltip: "Save as separate files",
+      label: t("Separate files"),
+      tooltip: t("Save as separate files"),
       mode: PlaylistOutputMode.Individual
     },
     {
       id: `${OUTPUT_ID_PREFIX}${initialPlaylistId}${OUTPUT_ID_ZIP_SUFFIX}`,
-      label: "Single ZIP",
-      tooltip: "Bundle into one ZIP",
+      label: t("Single ZIP"),
+      tooltip: t("Bundle into one ZIP"),
       mode: PlaylistOutputMode.Zip
     }
-  ];
+  ]);
 
   const outputElements = new SvelteMap<string, HTMLElement>();
 
@@ -168,19 +167,19 @@
     return [
       {
         value: VideoQualityMode.Best,
-        label: "Best quality"
+        label: t("Best quality")
       },
       ...heights.map(height => ({
         value: String(height),
         label: state.isMetadataLoaded && height <= state.guaranteedQuality
           ? `${height}p`
-          : `Up to ${height}p`
+          : t("Up to {height}p", { height })
       }))
     ];
   });
 
-  const videoExtOptions = listContainerChoices("video").map(toInlineLabeledOption);
-  const audioExtOptions = listContainerChoices("audio").map(toInlineLabeledOption);
+  const videoExtOptions = $derived(listContainerChoices("video").map(toInlineLabeledOption));
+  const audioExtOptions = $derived(listContainerChoices("audio").map(toInlineLabeledOption));
 
   function handleZipNameInput(e: Event): void {
     const isInputElement = e.target instanceof HTMLInputElement;
@@ -206,17 +205,17 @@
   <PolymerSelect
     id="playlist-grid-download-type-{playlistId}"
     disabled={state.isWorking}
-    label="Download type"
+    label={t("Download type")}
     onchange={value => (state.effectiveDownloadType = value as DownloadType)}
     options={downloadTypeOptions}
     value={state.effectiveDownloadType}
   />
 </div>
 
-<ytd-settings-options-renderer class="ytdl-section" {@attach attachSettingsOptions(OUTPUT_SETTINGS_TITLE)}>
+<ytd-settings-options-renderer class="ytdl-section" {@attach attachSettingsOptions(t("Output"))}>
   <div
     class="ytdl-seg"
-    aria-label="Output"
+    aria-label={t("Output")}
     onkeydown={handleOutputKeydown}
     role="radiogroup"
     tabindex="-1"
@@ -237,7 +236,7 @@
       {@attach applyPaperInputTheme}
       autocomplete="off"
       disabled={state.isWorking || undefined}
-      label="Filename"
+      label={t("Filename")}
       oninput={handleZipNameInput}
       spellcheck={false}
       value={state.effectiveZipName}
@@ -251,7 +250,7 @@
     <PolymerSelect
       id="playlist-grid-quality-{playlistId}"
       disabled={state.isWorking}
-      label="Quality"
+      label={t("Quality")}
       onchange={value => (state.effectiveQuality = value)}
       options={qualityOptions}
       value={state.effectiveQuality}
@@ -259,7 +258,7 @@
     <PolymerSelect
       id="playlist-grid-video-ext-{playlistId}"
       disabled={state.isWorking}
-      label="Video format"
+      label={t("Video format")}
       onchange={value => (state.effectiveVideoExt = value)}
       options={videoExtOptions}
       value={state.effectiveVideoExt}
@@ -272,7 +271,7 @@
     <PolymerSelect
       id="playlist-grid-audio-ext-{playlistId}"
       disabled={state.isWorking}
-      label="Audio format"
+      label={t("Audio format")}
       onchange={value => (state.effectiveAudioExt = value)}
       options={audioExtOptions}
       value={state.effectiveAudioExt}

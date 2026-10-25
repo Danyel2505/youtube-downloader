@@ -2,6 +2,7 @@ import { calculateBatchProgress, resolveCurrentPhaseLabel } from "./helpers/play
 import type { createBatchDownloadState } from "./PlaylistDownloader.batch.svelte";
 import { scrollVideoItemIntoView } from "./PlaylistDownloader.scroll";
 import type { createVideoDataState } from "./PlaylistDownloader.video-data.svelte";
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { statusProgressSignal } from "@/lib/ui/synced-stores.svelte";
 
 type BatchState = ReturnType<typeof createBatchDownloadState>;
@@ -72,11 +73,18 @@ export function createProgressState({
 
   const downloadButtonLabel = $derived.by(() => {
     if (batch.isDownloading) {
-      return `Downloading ${batch.downloadedCount} of ${batch.totalCount}`;
+      return t("Downloading {done} of {total}", {
+        done: batch.downloadedCount,
+        total: batch.totalCount
+      });
     }
 
     const count = videoData.selectedDownloadableVideos.length;
-    return count === 0 ? "Download selected" : `Download ${count} video${count === 1 ? "" : "s"}`;
+    if (count === 0) {
+      return t("Download selected");
+    }
+
+    return t(count === 1 ? "Download {count} video" : "Download {count} videos", { count });
   });
 
   $effect(() => {

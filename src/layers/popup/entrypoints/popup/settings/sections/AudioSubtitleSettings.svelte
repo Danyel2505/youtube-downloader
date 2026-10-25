@@ -8,17 +8,18 @@
   import AudioLanguagesSection from "./AudioLanguagesSection.svelte";
   import AudioTrackSection from "./AudioTrackSection.svelte";
   import CaptionLanguageSection from "./CaptionLanguageSection.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
 
   const { options, slideDuration }: SlidingSettingsProps = $props();
 </script>
 
-<SettingsGroup title="Audio &amp; subtitles">
+<SettingsGroup title={t("Audio & subtitles")}>
   <SettingsSwitchRow
     icon={captionsIcon}
     isAccent
     isChecked={options.downloadExtras}
-    label="Download additional audio tracks and captions"
+    label={t("Download additional audio tracks and captions")}
     onchange={isChecked => {
       void setOption({
         key: "downloadExtras",
@@ -29,7 +30,7 @@
   <SettingsSwitchRow
     icon={audioVolumeIcon}
     isChecked={options.includeAutoDubbing}
-    label="Include auto-dubbed audio tracks"
+    label={t("Include auto-dubbed audio tracks")}
     onchange={isChecked => {
       void setOption({
         key: "includeAutoDubbing",
@@ -40,7 +41,7 @@
   <SettingsSwitchRow
     icon={sparkleIcon}
     isChecked={options.includeAiCaptions}
-    label="Include AI-generated captions"
+    label={t("Include AI-generated captions")}
     onchange={isChecked => {
       void setOption({
         key: "includeAiCaptions",

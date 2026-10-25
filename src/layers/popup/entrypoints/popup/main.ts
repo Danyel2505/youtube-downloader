@@ -1,5 +1,6 @@
 import App from "./App.svelte";
 import { loadOpenYouTubeTabs } from "./downloads/youtube-tab";
+import { setLanguage } from "@/lib/i18n/i18n.svelte.ts";
 import { forwardLogsToBackground } from "@/lib/logs/log-capture-extension";
 import { isFFmpegReadyItem } from "@/lib/storage/storage";
 import {
@@ -44,6 +45,8 @@ const [
 ]);
 const currentTabId = activeTabs[0]?.id;
 const currentSourceUrl = activeTabs[0]?.url;
+
+setLanguage(options.language);
 
 const elApp = document.getElementById("app");
 if (!elApp) {

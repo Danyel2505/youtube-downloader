@@ -56,6 +56,16 @@ export const ProgressType = {
 
 export type ProgressType = (typeof ProgressType)[keyof typeof ProgressType];
 
+// What the processing phase is doing right now, so the UI can say it instead of just "Processing"
+export const ProgressStage = {
+  Extracting: "extracting",
+  Reencoding: "reencoding",
+  Merging: "merging",
+  Saving: "saving"
+} as const;
+
+export type ProgressStage = (typeof ProgressStage)[keyof typeof ProgressStage];
+
 export const VideoQualityMode = {
   Best: "best",
   CurrentQuality: "current-quality",
@@ -96,3 +106,11 @@ export const CaptionLanguageMode = {
 } as const;
 
 export type CaptionLanguageMode = (typeof CaptionLanguageMode)[keyof typeof CaptionLanguageMode];
+
+export const LanguagePreference = {
+  Auto: "auto",
+  English: "en",
+  SpanishLatinAmerica: "es-419"
+} as const;
+
+export type LanguagePreference = (typeof LanguagePreference)[keyof typeof LanguagePreference];

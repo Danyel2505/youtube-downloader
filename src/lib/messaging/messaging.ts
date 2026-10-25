@@ -3,6 +3,7 @@ import type {
   DownloadRequest,
   DownloadType,
   Prettify,
+  ProgressStage,
   ProgressType,
   VideoMetadata
 } from "@/types";
@@ -171,6 +172,7 @@ export type ProgressUpdate = Prettify<{
   videoId: string;
   progress: number;
   progressType: ProgressType;
+  stage?: ProgressStage;
   downloadedBytes?: number;
   totalBytes?: number;
   bytesPerSecond?: number;

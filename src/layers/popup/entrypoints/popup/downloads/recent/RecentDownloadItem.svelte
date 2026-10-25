@@ -6,6 +6,7 @@
   import ThumbnailBadge, { BadgeSide } from "../../shared/ThumbnailBadge.svelte";
   import ThumbnailDuration from "../../shared/ThumbnailDuration.svelte";
   import { focusOrOpenTab, toRecentOrigin } from "../youtube-tab";
+  import { getLocale, t } from "@/lib/i18n/i18n.svelte.ts";
   import { resolveDisplayThumbnailUrl } from "@/lib/youtube/thumbnail-url";
   import type { RecentDownloadEntry } from "@/types";
 
@@ -29,33 +30,41 @@
   const displayThumbnailUrl = $derived(resolveDisplayThumbnailUrl(entry));
 
   const origin = $derived(toRecentOrigin(entry));
-  const openPageLabel = $derived(origin.isPlaylist ? "Open playlist" : "Open video");
+  const openPageLabel = $derived(origin.isPlaylist ? t("Open playlist") : t("Open video"));
 
-  const RTF = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-  const NF_BYTES = new Intl.NumberFormat(undefined, {
-    style: "unit",
-    unit: "byte",
-    unitDisplay: "narrow",
-    maximumFractionDigits: 0
-  });
-  const NF_KB = new Intl.NumberFormat(undefined, {
-    style: "unit",
-    unit: "kilobyte",
-    unitDisplay: "narrow",
-    maximumFractionDigits: 0
-  });
-  const NF_MB = new Intl.NumberFormat(undefined, {
-    style: "unit",
-    unit: "megabyte",
-    unitDisplay: "narrow",
-    maximumFractionDigits: 1
-  });
-  const NF_GB = new Intl.NumberFormat(undefined, {
-    style: "unit",
-    unit: "gigabyte",
-    unitDisplay: "narrow",
-    maximumFractionDigits: 2
-  });
+  const RTF = $derived(new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" }));
+  const NF_BYTES = $derived(
+    new Intl.NumberFormat(getLocale(), {
+      style: "unit",
+      unit: "byte",
+      unitDisplay: "narrow",
+      maximumFractionDigits: 0
+    })
+  );
+  const NF_KB = $derived(
+    new Intl.NumberFormat(getLocale(), {
+      style: "unit",
+      unit: "kilobyte",
+      unitDisplay: "narrow",
+      maximumFractionDigits: 0
+    })
+  );
+  const NF_MB = $derived(
+    new Intl.NumberFormat(getLocale(), {
+      style: "unit",
+      unit: "megabyte",
+      unitDisplay: "narrow",
+      maximumFractionDigits: 1
+    })
+  );
+  const NF_GB = $derived(
+    new Intl.NumberFormat(getLocale(), {
+      style: "unit",
+      unit: "gigabyte",
+      unitDisplay: "narrow",
+      maximumFractionDigits: 2
+    })
+  );
   const BYTES_PER_KB = 1024;
   const BYTES_PER_MB = 1024 * 1024;
   const BYTES_PER_GB = 1024 * 1024 * 1024;
@@ -135,8 +144,8 @@
     <div class="recent-actions">
       <button
         class="recent-action-btn"
-        aria-label="Show in folder"
-        data-tooltip="Show in folder"
+        aria-label={t("Show in folder")}
+        data-tooltip={t("Show in folder")}
         data-tooltip-align="end"
         onclick={onShowInFolder}
         type="button"
@@ -158,8 +167,8 @@
       <button
         style:anchor-name={anchorName}
         class="recent-action-btn"
-        aria-label="Change format"
-        data-tooltip="Change format"
+        aria-label={t("Change format")}
+        data-tooltip={t("Change format")}
         data-tooltip-align="end"
         onclick={onChangeFormat}
         type="button"
@@ -168,8 +177,8 @@
       </button>
       <button
         class="recent-action-btn"
-        aria-label="Remove from history"
-        data-tooltip="Remove from history"
+        aria-label={t("Remove from history")}
+        data-tooltip={t("Remove from history")}
         data-tooltip-align="end"
         onclick={onRemove}
         type="button"

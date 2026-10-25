@@ -1,22 +1,26 @@
 <script lang="ts">
   import type { SettingsProps } from "../settings-props";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
   import { normalizeLanguageCode } from "@/lib/youtube/audio-format-helpers";
-  import { LANGUAGES } from "#popup/lib/languages";
+  import { getLanguageName, LANGUAGES } from "#popup/lib/languages";
 
   const { options }: SettingsProps = $props();
 
   const PARENTHESIS_SUFFIX = / \(.*\)$/;
-  const languageChoices = [...new Map(LANGUAGES.map(([name, code]) => [
+  const languageChoices = $derived([...new Map(LANGUAGES.map(([name, code]) => [
     normalizeLanguageCode(code),
-    name.replace(PARENTHESIS_SUFFIX, "")
-  ])).entries()];
+    getLanguageName({
+      name,
+      code
+    }).replace(PARENTHESIS_SUFFIX, "")
+  ])).entries()]);
 </script>
 
 <fieldset class="set-section-fieldset">
-  <legend class="languages-legend">Audio languages to download by default</legend>
+  <legend class="languages-legend">{t("Audio languages to download by default")}</legend>
   <p class="languages-hint">
-    {options.audioLanguages.length ? "Other tracks are skipped" : "None marked, so every track is downloaded"}
+    {options.audioLanguages.length ? t("Other tracks are skipped") : t("None marked, so every track is downloaded")}
   </p>
   <div class="languages-grid">
     {#each languageChoices as [code, name] (code)}

@@ -1,4 +1,5 @@
 import { buildTrackButtons, refreshButton } from "./TrackChoice.button-data";
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { onButtonClick } from "@/lib/messaging/cross-world-messenger";
 import { PanelTrackMode, TrackKind, type Prettify } from "@/types";
 import { untrack } from "svelte";
@@ -16,9 +17,9 @@ export function createTrackChoiceState(params: TrackChoiceParams) {
   const buttons = $derived(buildTrackButtons(params.kind));
 
   const isAudio = $derived(params.kind === TrackKind.Audio);
-  const kindLabel = $derived(isAudio ? "Audio language" : "Captions");
-  const originalSubLabel = $derived(isAudio ? "The creator's baked-in audio track" : "The video's original caption track");
-  const accessibleLabel = $derived(isAudio ? "Audio language" : "Caption language");
+  const kindLabel = $derived(isAudio ? t("Audio language") : t("Captions"));
+  const originalSubLabel = $derived(isAudio ? t("The creator's baked-in audio track") : t("The video's original caption track"));
+  const accessibleLabel = $derived(isAudio ? t("Audio language") : t("Caption language"));
   const isAlternativeModeAbsent = $derived(buttons.length > 0 && params.disabledModes.length >= buttons.length - 1);
 
   const elements = new SvelteMap<string, HTMLElement>();

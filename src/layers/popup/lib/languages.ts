@@ -1,3 +1,6 @@
+import { getLocale } from "@/lib/i18n/i18n.svelte.ts";
+import { LanguagePreference } from "@/types";
+
 export const LANGUAGES: [string, string][] = [
   ["Arabic", "ar"],
   ["Bengali", "bn"],
@@ -35,3 +38,23 @@ export const LANGUAGES: [string, string][] = [
   ["Urdu", "ur"],
   ["Vietnamese", "vi"]
 ];
+
+// English keeps the names above; Spanish asks the browser, falling back to the English name
+export function getLanguageName({ name, code }: {
+  name: string;
+  code: string;
+}) {
+  if (getLocale() === LanguagePreference.English) {
+    return name;
+  }
+
+  try {
+    const spanishName = new Intl.DisplayNames(getLocale(), {
+      type: "language",
+      languageDisplay: "standard"
+    }).of(code);
+    return spanishName ? spanishName.charAt(0).toUpperCase() + spanishName.slice(1) : name;
+  } catch {
+    return name;
+  }
+}

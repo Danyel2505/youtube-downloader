@@ -1,4 +1,4 @@
-import { ProgressType } from "@/types";
+import type { ProgressStage, ProgressType } from "@/types";
 import type { Prettify } from "@/types";
 
 export type ButtonViewState = Prettify<{
@@ -12,15 +12,11 @@ export type ButtonViewState = Prettify<{
   downloadProgress: string;
   isProgressNonZero: boolean;
   progressType: ProgressType | "";
+  stage?: ProgressStage;
   filename: string;
   quality: string;
   isDownloadable: boolean;
 }>;
-
-export const percentFormatter = new Intl.NumberFormat(document.documentElement.lang, {
-  style: "percent",
-  maximumFractionDigits: 0
-});
 
 export const WatchButtonLayout = {
   Watch: "watch",

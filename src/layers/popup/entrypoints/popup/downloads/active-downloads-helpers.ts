@@ -1,6 +1,6 @@
+import { describeActivity } from "@/lib/youtube/progress-label";
 import { calculateWeightedProgress } from "@/lib/youtube/video-helpers";
-import { ProgressType } from "@/types";
-import type { DownloadProgressEntry, Prettify, VideoDetail } from "@/types";
+import type { DownloadProgressEntry, DownloadType, Prettify, VideoDetail } from "@/types";
 
 const PERCENT_COMPLETE = 100;
 
@@ -18,21 +18,21 @@ function computeWeightedFraction(entry: StatusProgress[string]) {
 type GetProgressLabelParams = Prettify<{
   videoId: string;
   statusProgress: StatusProgress;
-  percentFormatter: Intl.NumberFormat;
+  downloadType: DownloadType;
 }>;
-export function getProgressLabel({ videoId, statusProgress, percentFormatter }: GetProgressLabelParams) {
+// What the download is doing right now, in words; the percentage is shown beside it
+export function getProgressLabel({ videoId, statusProgress, downloadType }: GetProgressLabelParams) {
   const progressEntry = statusProgress[videoId];
   if (!progressEntry) {
     return "";
   }
 
-  const percentage = percentFormatter.format(computeWeightedFraction(progressEntry));
-  const isFfmpegProgress = progressEntry.progressType === ProgressType.FFmpeg;
-  if (isFfmpegProgress) {
-    return `${percentage} processed`;
-  }
-
-  return `${percentage} downloaded`;
+  return describeActivity({
+    progressType: progressEntry.progressType,
+    stage: progressEntry.stage,
+    progress: progressEntry.progress,
+    downloadType
+  });
 }
 
 type GetProgressParams = Prettify<{
@@ -74,30 +74,38 @@ function getProgressEntry(
   return statusProgress[videoId];
 }
 
-type GetVideoStatusLabelParams = Prettify<{
+export const VideoStartState = {
+  Starting: "starting",
+  WaitingForFFmpeg: "waiting-for-ffmpeg",
+  Queued: "queued"
+} as const;
+
+export type VideoStartState = (typeof VideoStartState)[keyof typeof VideoStartState];
+
+type GetVideoStartStateParams = Prettify<{
   i: number;
   isFFmpegReady: boolean;
 }>;
-export function getVideoStatusLabel({ i, isFFmpegReady }: GetVideoStatusLabelParams) {
+export function getVideoStartState({ i, isFFmpegReady }: GetVideoStartStateParams) {
   const isFirstItem = i === 0;
   if (isFirstItem) {
-    return isFFmpegReady ? "Processing…" : "Waiting for FFmpeg…";
+    return isFFmpegReady ? VideoStartState.Starting : VideoStartState.WaitingForFFmpeg;
   }
 
-  return "Downloading";
+  return VideoStartState.Queued;
 }
 
 type BindDownloadAccessorsParams = Prettify<{
   statusProgress: StatusProgress;
   videoDetails: VideoDetails;
-  percentFormatter: Intl.NumberFormat;
+  getDownloadType: (videoId: string) => DownloadType;
 }>;
-export function bindDownloadAccessors({ statusProgress, videoDetails, percentFormatter }: BindDownloadAccessorsParams) {
+export function bindDownloadAccessors({ statusProgress, videoDetails, getDownloadType }: BindDownloadAccessorsParams) {
   return {
     label: (id: string) => getProgressLabel({
       videoId: id,
       statusProgress,
-      percentFormatter
+      downloadType: getDownloadType(id)
     }),
     progress: (id: string) => getProgress({
       videoId: id,

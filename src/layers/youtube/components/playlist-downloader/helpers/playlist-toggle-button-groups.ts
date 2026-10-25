@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import {
   DownloadType,
   PlaylistDownloadMode,
@@ -24,8 +25,12 @@ export const TOGGLE_BUTTON_GROUPS = {
   speed: [
     {
       id: "playlist-mode-fast",
-      label: "In parallel",
-      tooltip: "Download all in parallel",
+      get label() {
+        return t("In parallel");
+      },
+      get tooltip() {
+        return t("Download all in parallel");
+      },
       isActive: state => state.downloadMode === PlaylistDownloadMode.Fast,
       onClick(state: ToggleButtonState) {
         state.downloadMode = PlaylistDownloadMode.Fast;
@@ -33,8 +38,12 @@ export const TOGGLE_BUTTON_GROUPS = {
     },
     {
       id: "playlist-mode-data-saver",
-      label: "One at a time",
-      tooltip: "Download one at a time",
+      get label() {
+        return t("One at a time");
+      },
+      get tooltip() {
+        return t("Download one at a time");
+      },
       isActive: state => state.downloadMode === PlaylistDownloadMode.DataSaver,
       onClick(state: ToggleButtonState) {
         state.downloadMode = PlaylistDownloadMode.DataSaver;
@@ -44,8 +53,12 @@ export const TOGGLE_BUTTON_GROUPS = {
   output: [
     {
       id: "playlist-output-individual",
-      label: "Separate files",
-      tooltip: "Save as separate files",
+      get label() {
+        return t("Separate files");
+      },
+      get tooltip() {
+        return t("Save as separate files");
+      },
       isActive: state => state.outputMode === PlaylistOutputMode.Individual,
       onClick(state: ToggleButtonState) {
         state.outputMode = PlaylistOutputMode.Individual;
@@ -53,8 +66,12 @@ export const TOGGLE_BUTTON_GROUPS = {
     },
     {
       id: "playlist-output-zip",
-      label: "Single ZIP",
-      tooltip: "Bundle into one ZIP",
+      get label() {
+        return t("Single ZIP");
+      },
+      get tooltip() {
+        return t("Bundle into one ZIP");
+      },
       isActive: state => state.outputMode === PlaylistOutputMode.Zip,
       onClick(state: ToggleButtonState) {
         state.outputMode = PlaylistOutputMode.Zip;
@@ -64,8 +81,12 @@ export const TOGGLE_BUTTON_GROUPS = {
   type: [
     {
       id: "playlist-type-auto",
-      label: "Auto",
-      tooltip: "Auto: audio for music, video+audio for rest",
+      get label() {
+        return t("Auto");
+      },
+      get tooltip() {
+        return t("Auto: audio for music, video+audio for rest");
+      },
       isActive: state => state.effectiveDownloadType === DownloadType.Auto,
       onClick(state: ToggleButtonState) {
         state.effectiveDownloadType = DownloadType.Auto;
@@ -73,8 +94,12 @@ export const TOGGLE_BUTTON_GROUPS = {
     },
     {
       id: "playlist-type-video-audio",
-      label: "Video + audio",
-      tooltip: "Video + audio stream",
+      get label() {
+        return t("Video + audio");
+      },
+      get tooltip() {
+        return t("Video + audio stream");
+      },
       isActive: state => state.effectiveDownloadType === DownloadType.VideoAndAudio,
       onClick(state: ToggleButtonState) {
         state.effectiveDownloadType = DownloadType.VideoAndAudio;
@@ -82,8 +107,12 @@ export const TOGGLE_BUTTON_GROUPS = {
     },
     {
       id: "playlist-type-video",
-      label: "Video only",
-      tooltip: "Video stream only",
+      get label() {
+        return t("Video only");
+      },
+      get tooltip() {
+        return t("Video stream only");
+      },
       isActive: state => state.effectiveDownloadType === DownloadType.Video,
       onClick(state: ToggleButtonState) {
         state.effectiveDownloadType = DownloadType.Video;
@@ -91,8 +120,12 @@ export const TOGGLE_BUTTON_GROUPS = {
     },
     {
       id: "playlist-type-audio",
-      label: "Audio only",
-      tooltip: "Audio stream only",
+      get label() {
+        return t("Audio only");
+      },
+      get tooltip() {
+        return t("Audio stream only");
+      },
       isActive: state => state.effectiveDownloadType === DownloadType.Audio,
       onClick(state: ToggleButtonState) {
         state.effectiveDownloadType = DownloadType.Audio;

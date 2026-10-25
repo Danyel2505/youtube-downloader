@@ -6,6 +6,7 @@
   import PlaylistDownloaderActions from "./PlaylistDownloaderActions.svelte";
   import PlaylistDownloaderFormatSections from "./PlaylistDownloaderFormatSections.svelte";
   import PlaylistDownloaderSettings from "./PlaylistDownloaderSettings.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   const playlist = createPlaylistDownloaderState();
   const toggleButtons = createPlaylistToggleButtons(playlist);
   const actionButtons = createPlaylistActionButtons(playlist);
@@ -20,14 +21,17 @@
 <div class="ytdl-playlist-container">
   <div class="ytdl-section">
     <div class="ytdl-section-title">
-      <span>Download playlist</span>
+      <span>{t("Download playlist")}</span>
       {#if playlist.isDownloading}
         <yt-button-view-model {@attach actionButtons.attachStopAll}></yt-button-view-model>
       {/if}
     </div>
     {#if playlist.isDownloading}
       <span class="ytdl-scroll-sync-hint" aria-live="polite">
-        {playlist.downloadedCount} of {playlist.totalCount} videos saved
+        {t("{downloadedCount} of {totalCount} videos saved", {
+          downloadedCount: playlist.downloadedCount,
+          totalCount: playlist.totalCount
+        })}
       </span>
     {/if}
   </div>

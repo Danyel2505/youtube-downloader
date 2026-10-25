@@ -2,13 +2,14 @@
   import DownloadOptionsCard from "../download-options/DownloadOptionsCard.svelte";
   import downloadIcon from "../icons/download.svg?raw";
   import sparkleIcon from "../icons/sparkle.svg?raw";
-  import { PANEL_LABELS, PopupPanel } from "../tabs";
+  import { getPanelLabel, PopupPanel } from "../tabs";
   import ActiveDownloadsSections from "./ActiveDownloadsSections.svelte";
   import RecentDownloadsSection from "./recent/RecentDownloadsSection.svelte";
   import { startTabDownload } from "./watch-download";
   import { isActiveFromCurrentTab } from "./youtube-tab";
   import { resolveFFmpegCoreBuild } from "@/lib/download-pipeline/ffmpeg-core-build";
   import { FFmpegCoreBuild } from "@/lib/download-pipeline/mux-worker-types";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { deleteRecentDownload } from "@/lib/storage/recent-downloads-db";
   import { createLogger, LogScope } from "@/lib/utils/logger";
   import {
@@ -36,7 +37,6 @@
     videoOnlyList: string[];
     videoDetails: Record<string, VideoDetail>;
     statusProgress: Record<string, DownloadProgressEntry>;
-    percentFormatter: Intl.NumberFormat;
     recentDownloads: RecentDownloadEntry[];
     now: number;
     currentTabId?: number;
@@ -51,7 +51,7 @@
 
   const {
     isFFmpegReady, videoDownloads, musicList, videoOnlyList, videoDetails,
-    statusProgress, percentFormatter, recentDownloads, now,
+    statusProgress, recentDownloads, now,
     currentTabId, currentSourceUrl, pendingFormatChangeId, options,
     onCancel, onChangeFormat, onRecentChanged, onOpenSettings
   }: Props = $props();
@@ -79,14 +79,14 @@
 
   const bannerScope = $derived.by(() => {
     if (hasCurrentTabDownloads && hasOtherTabDownloads) {
-      return "Across this tab and others";
+      return t("Across this tab and others");
     }
 
     if (hasCurrentTabDownloads) {
-      return "On this tab";
+      return t("On this tab");
     }
 
-    return "On other tabs";
+    return t("On other tabs");
   });
 
   const processingCount = $derived(
@@ -97,11 +97,11 @@
   const bannerCountText = $derived.by(() => {
     const parts: string[] = [];
     if (downloadingCount > 0) {
-      parts.push(`${downloadingCount} downloading`);
+      parts.push(t("{count} downloading", { count: downloadingCount }));
     }
 
     if (processingCount > 0) {
-      parts.push(`${processingCount} processing`);
+      parts.push(t("{count} processing", { count: processingCount }));
     }
 
     return parts.join(" · ");
@@ -122,12 +122,12 @@
   const isWatchPageTab = $derived(watchVideoId !== null);
   const emptyStateText = $derived.by(() => {
     if (isPopupOnlyWatchTab) {
-      return "Grab this video right here";
+      return t("Grab this video right here");
     }
 
     return isWatchPageTab
-      ? "Grab this video right here, or hit this button under any video on YouTube"
-      : "Start downloads right on YouTube - look for this button under any video";
+      ? t("Grab this video right here, or hit this button under any video on YouTube")
+      : t("Start downloads right on YouTube - look for this button under any video");
   });
   const isWatchDownloadOffered = $derived(watchVideoId !== null && !allActiveIds.includes(watchVideoId));
   let isStartingWatchDownload = $state(false);
@@ -197,7 +197,7 @@
     class={className}
     aria-controls="download-options-card"
     aria-expanded={isOptionsOpen}
-    aria-label="Download options"
+    aria-label={t("Download options")}
     disabled={isStartingWatchDownload}
     onclick={() => (isOptionsOpen = !isOptionsOpen)}
     type="button"
@@ -223,27 +223,27 @@
     <div class="empty-state-icon-box">
       {@html downloadIcon}
     </div>
-    <h3 class="empty-state-heading">No downloads yet</h3>
+    <h3 class="empty-state-heading">{t("No downloads yet")}</h3>
     <p class="empty-state-text">{emptyStateText}</p>
     <div class="youtube-actions-preview" aria-hidden={isWatchPageTab ? undefined : "true"}>
-      <span class="youtube-action-pill" aria-hidden="true">Like</span>
-      <span class="youtube-action-pill" aria-hidden="true">Share</span>
+      <span class="youtube-action-pill" aria-hidden="true">{t("Like")}</span>
+      <span class="youtube-action-pill" aria-hidden="true">{t("Share")}</span>
       <span class="youtube-action-pill youtube-download-pill">
         {#if isWatchPageTab}
           <button
             class="youtube-download-pill-main youtube-download-pill-button"
-            aria-label="Download this video"
+            aria-label={t("Download this video")}
             disabled={isStartingWatchDownload}
             onclick={handleStartWatchDownload}
             type="button"
           >
             {@html downloadIcon}
-            Download
+            {t("Download")}
           </button>
         {:else}
           <span class="youtube-download-pill-main">
             {@html downloadIcon}
-            Download
+            {t("Download")}
           </span>
         {/if}
         {#if isWatchDownloadOffered}
@@ -259,13 +259,13 @@
     <div class="empty-state-hint">
       {@html sparkleIcon}
       <span>
-        Tip: pick formats, quality &amp; languages in
+        {t("Tip: pick formats, quality & languages in")}
         <button
           class="text-link"
           onclick={onOpenSettings}
           type="button"
         >
-          {PANEL_LABELS[PopupPanel.Settings]}
+          {getPanelLabel(PopupPanel.Settings)}
         </button>
       </span>
     </div>
@@ -281,7 +281,7 @@
           type="button"
         >
           {@html downloadIcon}
-          Download this video
+          {t("Download this video")}
         </button>
         {@render optionsToggle("watch-download-toggle")}
       </div>
@@ -299,7 +299,7 @@
           onclick={() => onCancel(allActiveIds)}
           type="button"
         >
-          Cancel all
+          {t("Cancel all")}
         </button>
       </div>
     {/if}
@@ -314,7 +314,6 @@
       onRemoveRecent={handleRemove}
       onShowRecentInFolder={handleShowInFolder}
       {pendingFormatChangeId}
-      {percentFormatter}
       {recentDownloads}
       {statusProgress}
       {videoDetails}

@@ -6,17 +6,18 @@
   import type { SettingsProps } from "../settings-props";
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsSwitchRow from "../ui/SettingsSwitchRow.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
 
   const { options }: SettingsProps = $props();
 </script>
 
-<SettingsGroup title="When download completes">
+<SettingsGroup title={t("When download completes")}>
   <SettingsSwitchRow
     icon={bellIcon}
     isAccent
     isChecked={options.isNotifyOnIdle}
-    label="Notify when window is idle"
+    label={t("Notify when window is idle")}
     onchange={isChecked => {
       void setOption({
         key: "isNotifyOnIdle",
@@ -27,7 +28,7 @@
   <SettingsSwitchRow
     icon={folderIcon}
     isChecked={options.isRevealOnComplete}
-    label="Reveal file in folder"
+    label={t("Reveal file in folder")}
     onchange={isChecked => {
       void setOption({
         key: "isRevealOnComplete",
@@ -37,12 +38,12 @@
   />
 </SettingsGroup>
 
-<SettingsGroup title="Integration">
+<SettingsGroup title={t("Integration")}>
   <SettingsSwitchRow
     icon={playArrowIcon}
     isAccent
     isChecked={options.isShowNativeDownload}
-    label="Show YouTube's own download button on watch page"
+    label={t("Show YouTube's own download button on watch page")}
     onchange={isChecked => {
       void setOption({
         key: "isShowNativeDownload",
@@ -53,7 +54,7 @@
   <SettingsSwitchRow
     icon={downloadIcon}
     isChecked={options.isShowGridDownloadButtons}
-    label="Show download buttons on home, subscriptions, channel and search pages"
+    label={t("Show download buttons on home, subscriptions, channel and search pages")}
     onchange={isChecked => {
       void setOption({
         key: "isShowGridDownloadButtons",

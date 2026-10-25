@@ -2,6 +2,7 @@
   import PlaylistGridFormatSections from "./PlaylistGridFormatSections.svelte";
   import type { createPlaylistGridItemState } from "./PlaylistGridItem.state.svelte";
   import PlaylistGridPanelFooter from "./PlaylistGridPanelFooter.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { onButtonClick } from "@/lib/messaging/cross-world-messenger";
   import { createFocusManager } from "#youtube/components/download-options-panel/DownloadOptionsPanel.focus.svelte";
   import {
@@ -47,11 +48,11 @@
   tabindex="-1"
 >
   <div class="ytdl-panel-header">
-    <h2 id="ytdl-grid-panel-title-{playlistId}" class="ytdl-panel-title">Download playlist</h2>
+    <h2 id="ytdl-grid-panel-title-{playlistId}" class="ytdl-panel-title">{t("Download playlist")}</h2>
     <yt-button-view-model
       class={scopingClass}
       {@attach attachCloseButton}
-      aria-label="Close"
+      aria-label={t("Close")}
       data-ytdl-button-id={HEADER_CLOSE_BUTTON_ID}
       role="button"
       tabindex="0"

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   interface Props {
     version: string;
   }
@@ -13,10 +14,10 @@
     <path d="M12 2 4 10h4v8h8v-8h4zm-2 14v-6H8.83L12 6.83 15.17 10H14v6z" />
   </svg>
   <span class="update-banner-text">
-    Update available
+    {t("Update available")}
     <span class="update-banner-version">v{version}</span>
   </span>
-  <span class="update-banner-action">Get it</span>
+  <span class="update-banner-action">{t("Get it")}</span>
 </a>
 
 <style>

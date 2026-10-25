@@ -1,11 +1,15 @@
 <script lang="ts">
   import { createFooterState, PrimaryButtonState } from "./DownloadOptionsPanelFooter.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
+  import type { DownloadType, ProgressStage, ProgressType } from "@/types";
   import { attachViewButton } from "#youtube/lib/ui/panel-button-attachments.svelte";
 
   interface Props {
     primaryState: PrimaryButtonState;
     displayProgress: number;
-    progressType: string;
+    progressType: ProgressType | "";
+    stage?: ProgressStage;
+    downloadType?: DownloadType;
     scopingClass: string;
     primaryButtonId: string;
     viewButtonId: string;
@@ -15,7 +19,7 @@
   }
 
   const {
-    primaryState, displayProgress, progressType, scopingClass,
+    primaryState, displayProgress, progressType, stage, downloadType, scopingClass,
     primaryButtonId, viewButtonId, getIsDownloadable, getIsFilenameValid,
     estimatedSizeLabel
   }: Props = $props();
@@ -33,6 +37,12 @@
     },
     get progressType() {
       return progressType;
+    },
+    get stage() {
+      return stage;
+    },
+    get downloadType() {
+      return downloadType;
     },
     get getIsDownloadable() {
       return getIsDownloadable;
@@ -70,7 +80,7 @@
     ></tp-yt-paper-progress>
     {#if isDone}
       <div class="ytdl-done-row">
-        <span class="ytdl-progress-label" role="status">Downloaded</span>
+        <span class="ytdl-progress-label" role="status">{t("Downloaded")}</span>
         <yt-button-view-model
           class={scopingClass}
           {@attach attachViewButton}
@@ -80,7 +90,7 @@
         ></yt-button-view-model>
       </div>
     {:else if isFailed}
-      <span class="ytdl-progress-label" role="alert">Download failed</span>
+      <span class="ytdl-progress-label" role="alert">{t("Download failed")}</span>
     {:else}
       <span class="ytdl-progress-label" aria-live="polite">{footer.downloadingLabel}</span>
     {/if}

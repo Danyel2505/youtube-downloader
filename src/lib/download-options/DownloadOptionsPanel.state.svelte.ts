@@ -16,12 +16,22 @@ import {
   resolveInitialExtension,
   resolveInitialFilename
 } from "./helpers/panel-init";
-import { resolveActualExtension, resolvePrimaryState, resolveQualityLabel } from "./helpers/panel-state-derived";
+import {
+  resolveActualExtension,
+  resolveMenuExtension,
+  resolvePrimaryState,
+  resolveQualityLabel
+} from "./helpers/panel-state-derived";
 import { syncAudioFromFormat } from "./helpers/player-active-tracks.svelte";
 import type { PanelHost } from "./panel-host";
 import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
 import { CONTENT_OPTIONS, interruptedDownloadStore, statusProgressSignal } from "@/lib/ui/synced-stores.svelte";
-import { getCompatibleFilename, isAudioMimeNativeForContainer, resolveAutoExtension } from "@/lib/utils/containers";
+import {
+  getCompatibleFilename,
+  isAudioMimeNativeForContainer,
+  resolveAutoExtension,
+  resolveContainerForVideo
+} from "@/lib/utils/containers";
 import { pinAudioCodecPreferences, pinVideoCodecPreferences } from "@/lib/youtube/align-formats-to-container";
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { predictOutputSize, type SizeInputs } from "@/lib/youtube/output-size";
@@ -136,15 +146,32 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
   });
   let isFilenameValid = $state(true);
 
+  // A codec picked by hand under a container that can't hold it is saved as MKV, not swapped
+  const planExtension = $derived(
+    pinnedVideoFormat
+      ? resolveContainerForVideo({
+        videoMimeType: pinnedVideoFormat.mimeType,
+        userExtension: extension
+      })
+      : extension
+  );
   const actualExtension = $derived(
     resolveActualExtension({
       downloadType,
       selectedVideoFormat,
       selectedAudioFormat,
-      extension,
+      extension: planExtension,
       getVideoData,
       downloadExtras: PANEL_OPTIONS.downloadExtras,
       codecPreferences
+    })
+  );
+  const menuExtension = $derived(
+    resolveMenuExtension({
+      selectedAudioFormat,
+      extension,
+      getVideoData,
+      downloadExtras: PANEL_OPTIONS.downloadExtras
     })
   );
   const isDownloadable = $derived(getVideoData().isDownloadable);
@@ -447,6 +474,9 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
     get progressType() {
       return statusEntry?.progressType ?? "";
     },
+    get stage() {
+      return statusEntry?.stage;
+    },
     get downloadType() {
       return downloadType;
     },
@@ -478,6 +508,9 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
     },
     get actualExtension() {
       return actualExtension;
+    },
+    get menuExtension() {
+      return menuExtension;
     },
     get codecPreferences() {
       return codecPreferences;

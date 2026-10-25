@@ -3,6 +3,7 @@
   import type { SettingsProps } from "../settings-props";
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsSwitchRow from "../ui/SettingsSwitchRow.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { MessageType, sendMessage } from "@/lib/messaging/messaging";
   import { setOption } from "@/lib/storage/storage";
 
@@ -13,11 +14,11 @@
   let status = $state("");
 </script>
 
-<SettingsGroup title="Troubleshooting">
+<SettingsGroup title={t("Troubleshooting")}>
   <SettingsSwitchRow
     icon={settingsIcon}
     isChecked={options.isLogsEnabled}
-    label="Record logs to help find errors"
+    label={t("Record logs to help find errors")}
     onchange={isChecked => {
       void setOption({
         key: "isLogsEnabled",
@@ -31,23 +32,23 @@
       onclick={async () => {
         const { report, entryCount } = await sendMessage(MessageType.GetLogs);
         if (!entryCount) {
-          status = "Nothing recorded yet, turn it on and try a download";
+          status = t("Nothing recorded yet, turn it on and try a download");
           return;
         }
 
         const isCopied = await navigator.clipboard.writeText(report).then(() => true, () => false);
-        status = isCopied ? `Copied ${entryCount} lines` : "Couldn't copy, save it as a file instead";
+        status = isCopied ? t("Copied {count} lines", { count: entryCount }) : t("Couldn't copy, save it as a file instead");
       }}
       type="button"
     >
-      Copy logs
+      {t("Copy logs")}
     </button>
     <button
       class="logs-button"
       onclick={async () => {
         const { report, entryCount } = await sendMessage(MessageType.GetLogs);
         if (!entryCount) {
-          status = "Nothing recorded yet, turn it on and try a download";
+          status = t("Nothing recorded yet, turn it on and try a download");
           return;
         }
 
@@ -55,24 +56,24 @@
         elLink.href = URL.createObjectURL(new Blob([report], { type: "text/plain" }));
         elLink.download = LOGS_FILENAME;
         elLink.click();
-        status = `Saved ${entryCount} lines`;
+        status = t("Saved {count} lines", { count: entryCount });
       }}
       type="button"
     >
-      Save as file
+      {t("Save as file")}
     </button>
     <button
       class="logs-button"
       onclick={async () => {
         await sendMessage(MessageType.ClearLogs);
-        status = "Logs cleared";
+        status = t("Logs cleared");
       }}
       type="button"
     >
-      Clear
+      {t("Clear")}
     </button>
   </div>
-  <p class="logs-hint">{status || "Logs hide tokens and signed links, but they do include video titles"}</p>
+  <p class="logs-hint">{status || t("Logs hide tokens and signed links, but they do include video titles")}</p>
 </SettingsGroup>
 
 <style>

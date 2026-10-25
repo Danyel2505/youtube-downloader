@@ -1,4 +1,5 @@
-import { ProgressType, type Prettify } from "@/types";
+import { describeActivity, formatPercent } from "@/lib/youtube/progress-label";
+import type { DownloadType, ProgressStage, ProgressType, Prettify } from "@/types";
 import {
   attachPrimaryButton as attachPrimaryButtonElement,
   PrimaryButtonState
@@ -9,31 +10,24 @@ export { PrimaryButtonState };
 export type FooterParams = Prettify<{
   readonly primaryState: PrimaryButtonState;
   readonly displayProgress: number;
-  readonly progressType: string;
+  readonly progressType: ProgressType | "";
+  readonly stage?: ProgressStage;
+  readonly downloadType?: DownloadType;
   readonly getIsDownloadable: () => boolean;
   readonly getIsFilenameValid: () => boolean;
   readonly estimatedSizeLabel: string;
 }>;
 
-const PERCENT_FORMATTER = new Intl.NumberFormat(document.documentElement.lang || undefined, {
-  style: "percent",
-  maximumFractionDigits: 0
-});
-
 export function createFooterState(params: FooterParams) {
   const downloadingLabel = $derived.by(() => {
+    const activity = describeActivity({
+      progressType: params.progressType,
+      stage: params.stage,
+      progress: params.displayProgress,
+      downloadType: params.downloadType
+    });
     const isProgressZero = params.displayProgress === 0;
-    if (isProgressZero) {
-      return "Preparing";
-    }
-
-    const formattedPercentage = PERCENT_FORMATTER.format(params.displayProgress / 100);
-    const isFfmpegProgress = params.progressType === ProgressType.FFmpeg;
-    if (isFfmpegProgress) {
-      return `${formattedPercentage} - Processing`;
-    }
-
-    return `${formattedPercentage} - Downloading`;
+    return isProgressZero ? activity : `${formatPercent(params.displayProgress / 100)} - ${activity}`;
   });
 
   function attachPrimaryButton(elButton: Element) {

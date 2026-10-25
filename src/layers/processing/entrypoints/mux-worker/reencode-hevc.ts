@@ -1,6 +1,7 @@
 import { isKeyFrame, openIvf, resolveDecoderCodec } from "./ivf-reader";
 import type { IvfFrame, IvfHeader } from "./ivf-reader";
 import { createLogger, LogScope } from "@/lib/utils/logger";
+import { createStallChecker } from "@/lib/utils/stream-stall";
 import { buildHevcEncoderConfig, isHevcEncoderConfigSupported } from "@/lib/video-reencode/hevc-config";
 import type { Prettify, VideoReencodeSpec } from "@/types";
 
@@ -13,9 +14,11 @@ const KEY_FRAME_INTERVAL_SECONDS = 2;
 const PROGRESS_REPORT_DELTA = 0.01;
 const EVEN_DIMENSION_STEP = 2;
 const PROGRESS_LOG_STEPS = 10;
+const MICROSECONDS_PER_SECOND = 1_000_000;
 
 type ReencodeProgress = Prettify<{
   encodedFrameCount: number;
+  lastTimestampMicroseconds: number;
   lastReportedProgress: number;
   isEncoderConfigured: boolean;
 }>;
@@ -89,6 +92,7 @@ async function encodeFrame(context: ReencodeContext, frame: VideoFrame) {
 
   encoder.encode(frame, { keyFrame: progress.encodedFrameCount % keyFrameInterval === 0 });
   progress.encodedFrameCount++;
+  progress.lastTimestampMicroseconds = frame.timestamp;
 }
 
 function toLogStep(progressFraction: number) {
@@ -96,14 +100,19 @@ function toLogStep(progressFraction: number) {
 }
 
 function reportEncodeProgress({ header, progress, onProgress }: ReencodeContext) {
-  const fraction = header.frameCount > 0 ? Math.min(progress.encodedFrameCount / header.frameCount, 1) : 0;
+  const isDurationKnown = header.durationMicroseconds > 0;
+  const fraction = isDurationKnown ? Math.min(progress.lastTimestampMicroseconds / header.durationMicroseconds, 1) : 0;
   if (fraction - progress.lastReportedProgress < PROGRESS_REPORT_DELTA) {
     return;
   }
 
   const isNewLogStep = toLogStep(fraction) > toLogStep(progress.lastReportedProgress);
   if (isNewLogStep) {
-    log.info("H.265 encode progress", `${progress.encodedFrameCount}/${header.frameCount} frames`);
+    log.info("H.265 encode progress", {
+      percent: Math.round(fraction * 100),
+      encodedFrames: progress.encodedFrameCount,
+      videoSeconds: Math.round(progress.lastTimestampMicroseconds / MICROSECONDS_PER_SECOND)
+    });
   }
 
   progress.lastReportedProgress = fraction;
@@ -213,12 +222,14 @@ type CreateCodecsParams = Prettify<{
   pendingFrames: VideoFrame[];
   progress: ReencodeProgress;
   rejectFailure: (error: Error) => void;
+  touchActivity: () => void;
 }>;
-function createCodecs({ output, pendingFrames, progress, rejectFailure }: CreateCodecsParams) {
+function createCodecs({ output, pendingFrames, progress, rejectFailure, touchActivity }: CreateCodecsParams) {
   output.truncate(0);
   let writeOffset = 0;
   const encoder = new VideoEncoder({
     output(chunk) {
+      touchActivity();
       const bytes = new Uint8Array(chunk.byteLength);
       chunk.copyTo(bytes);
       output.write(bytes, { at: writeOffset });
@@ -230,6 +241,7 @@ function createCodecs({ output, pendingFrames, progress, rejectFailure }: Create
   });
   const decoder = new VideoDecoder({
     output(frame) {
+      touchActivity();
       pendingFrames.push(frame);
     },
     error(error) {
@@ -256,7 +268,7 @@ export async function reencodeIvfToHevc({
     fourcc: header.fourcc,
     width: header.width,
     height: header.height,
-    frameCount: header.frameCount,
+    durationSeconds: Math.round(header.durationMicroseconds / MICROSECONDS_PER_SECOND),
     decoderCodec: decoderConfig.codec,
     spec
   });
@@ -266,14 +278,20 @@ export async function reencodeIvfToHevc({
   const pendingFrames: VideoFrame[] = [];
   const progress: ReencodeProgress = {
     encodedFrameCount: 0,
+    lastTimestampMicroseconds: 0,
     lastReportedProgress: 0,
     isEncoderConfigured: false
   };
+  // Neither codec answered for a while, so say so instead of leaving the download "processing"
+  const stallChecker = createStallChecker(() => {
+    rejectFailure(new Error(`The H.265 conversion stopped responding after ${progress.encodedFrameCount} frames`));
+  });
   const { encoder, decoder } = createCodecs({
     output,
     pendingFrames,
     progress,
-    rejectFailure
+    rejectFailure,
+    touchActivity: stallChecker.touch
   });
   const context: ReencodeContext = {
     spec,
@@ -297,6 +315,7 @@ export async function reencodeIvfToHevc({
   try {
     await Promise.race([feeding, failure]);
   } finally {
+    stallChecker.clear();
     releaseCodecs(context);
   }
 

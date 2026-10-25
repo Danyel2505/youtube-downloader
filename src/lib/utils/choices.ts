@@ -1,3 +1,4 @@
+import { tText } from "@/lib/i18n/i18n.svelte.ts";
 import type { LabeledOption } from "@/types";
 
 export type ChoiceText = {
@@ -16,10 +17,16 @@ export function listChoices<Value extends string>({ values, texts }: {
   values: readonly Value[];
   texts: Record<Value, ChoiceText>;
 }): Choice<Value>[] {
+  // Getters, so the text follows the language of whoever reads it
   return values.map(value => ({
     value,
-    label: texts[value].label,
-    description: texts[value].description
+    get label() {
+      return tText(texts[value].label);
+    },
+    get description() {
+      const { description } = texts[value];
+      return description && tText(description);
+    }
   }));
 }
 

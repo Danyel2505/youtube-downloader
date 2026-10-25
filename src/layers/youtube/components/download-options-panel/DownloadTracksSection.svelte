@@ -1,6 +1,7 @@
 <script lang="ts">
   import PolymerSelect from "../polymer-select/PolymerSelect.svelte";
   import { createTrackSelectState, type TrackSelectProps } from "@/lib/download-options/track-select.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { onButtonClick } from "@/lib/messaging/cross-world-messenger";
   import {
     attachTracksHeaderButton as attachTracksHeaderButtonUtil
@@ -59,14 +60,14 @@
             <PolymerSelect
               id="tracks-audio-select"
               disabled={props.isDownloading}
-              label="Audio language"
+              label={t("Audio language")}
               onchange={tracks.handleAudioChange}
               options={tracks.audioOptions}
               value={tracks.audioSelectValue}
             />
             {#if tracks.isExtrasToggleShown}
               <tp-yt-paper-toggle-button
-                aria-label="Include all audio tracks"
+                aria-label={t("Include all audio tracks")}
                 checked={props.downloadExtras ? "" : undefined}
                 disabled={props.isDownloading || tracks.isExtensionMultiTrackIncompatible ? "" : undefined}
                 onchange={e => {
@@ -75,9 +76,9 @@
                     props.ondownloadextraschange(e.target.hasAttribute("checked"));
                   }
                 }}
-              >Include all audio tracks</tp-yt-paper-toggle-button>
+              >{t("Include all audio tracks")}</tp-yt-paper-toggle-button>
               <div class="ytdl-extras-error-host" class:is-open={props.isExtrasAutoDisabled}>
-                <p class="ytdl-extras-error">AVI doesn't support multiple audio tracks</p>
+                <p class="ytdl-extras-error">{t("AVI doesn't support multiple audio tracks")}</p>
               </div>
             {/if}
           </div>
@@ -88,14 +89,14 @@
             <PolymerSelect
               id="tracks-caption-select"
               disabled={props.isDownloading}
-              label="Captions"
+              label={t("Captions")}
               onchange={tracks.handleCaptionChange}
               options={tracks.captionOptions}
               value={tracks.captionSelectValue}
             />
             {#if tracks.isExtraCaptionsToggleShown}
               <tp-yt-paper-toggle-button
-                aria-label="Include all captions"
+                aria-label={t("Include all captions")}
                 checked={props.downloadExtraCaptions ? "" : undefined}
                 disabled={props.isDownloading ? "" : undefined}
                 onchange={e => {
@@ -104,7 +105,7 @@
                     props.ondownloadextracaptionschange(e.target.hasAttribute("checked"));
                   }
                 }}
-              >Include all captions</tp-yt-paper-toggle-button>
+              >{t("Include all captions")}</tp-yt-paper-toggle-button>
             {/if}
           </div>
         {/if}

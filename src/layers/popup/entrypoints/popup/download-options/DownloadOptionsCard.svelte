@@ -2,6 +2,7 @@
   import DownloadOptionsForm from "./DownloadOptionsForm.svelte";
   import { createPopupPanelHost } from "./popup-panel-host";
   import { readTabVideoData } from "./tab-video-data";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { initContentOptions } from "@/lib/ui/synced-stores.svelte.ts";
   import { createLogger, LogScope } from "@/lib/utils/logger";
   import type { Options } from "@/types";
@@ -40,14 +41,14 @@
   });
 </script>
 
-<section id="download-options-card" class="options-card" aria-label="Download options">
+<section id="download-options-card" class="options-card" aria-label={t("Download options")}>
   {#await videoDataPromise}
-    <p class="options-card-status">Reading this video's formats</p>
+    <p class="options-card-status">{t("Reading this video's formats")}</p>
   {:then videoData}
     {#if videoData?.isDownloadable}
       <DownloadOptionsForm {host} {videoData} />
     {:else}
-      <p class="options-card-status">Can't read this video's formats - reload the page and try again</p>
+      <p class="options-card-status">{t("Can't read this video's formats - reload the page and try again")}</p>
     {/if}
   {/await}
 </section>

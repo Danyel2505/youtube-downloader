@@ -2,6 +2,8 @@
   import instantIcon from "../icons/instant.svg?raw";
   import reEncodeIcon from "../icons/re-encode.svg?raw";
   import slowerIcon from "../icons/slower.svg?raw";
+  import type { MessageKey } from "@/lib/i18n/es-419";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { TranscodeSpeed } from "@/lib/utils/containers";
   import type { FormatItem } from "@/lib/utils/containers";
 
@@ -37,12 +39,12 @@
     return TagKind.Instant;
   }
 
-  const TAG_LABEL: Record<TagKind, string> = {
+  const TAG_LABEL_KEYS = {
     [TagKind.Current]: "Current",
     [TagKind.Instant]: "Instant",
     [TagKind.ReEncodes]: "Re-encodes",
     [TagKind.Slower]: "Slower"
-  };
+  } as const satisfies Record<TagKind, MessageKey>;
 
   function getTagIcon(kind: TagKind): string {
     if (kind === TagKind.Current) {
@@ -68,7 +70,7 @@
     <button
       class="format-card format-card--{tag}"
       class:format-card--pending={isPending}
-      aria-label="Transcode to {item.extension.toUpperCase()}"
+      aria-label={t("Transcode to {format}", { format: item.extension.toUpperCase() })}
       disabled={item.isCurrent || item.isExcluded || pendingExtension !== null}
       onclick={() => onSelect(item)}
       type="button"
@@ -79,7 +81,7 @@
           {#if tag !== TagKind.Current}
             <span class="format-tag-icon" aria-hidden="true">{@html getTagIcon(tag)}</span>
           {/if}
-          {TAG_LABEL[tag]}
+          {t(TAG_LABEL_KEYS[tag])}
         </span>
       </div>
       {#if item.description}

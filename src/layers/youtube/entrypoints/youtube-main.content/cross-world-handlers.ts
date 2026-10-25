@@ -3,6 +3,7 @@ import "./cta-button.css";
 import { applyDefaultFormat } from "./video/default-format";
 import { cancelActiveDownload, startDownload } from "./video/download";
 import { registerSizeInputsHandler } from "./video/size-inputs";
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { CrossWorldMessage, crossWorldMessenger, dispatchButtonClick } from "@/lib/messaging/cross-world-messenger";
 import {
   DATA_BUTTON_ID_ATTR,
@@ -31,8 +32,8 @@ export function registerCrossWorldHandlers() {
       }
 
       elViewButton.data = {
-        title: "View",
-        accessibilityText: "View in folder",
+        title: t("View"),
+        accessibilityText: t("View in folder"),
         style: ButtonStyle.Mono,
         type: ButtonType.Text,
         buttonSize: ButtonSize.XSmall,

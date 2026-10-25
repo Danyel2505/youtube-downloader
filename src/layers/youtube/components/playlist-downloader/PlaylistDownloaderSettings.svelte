@@ -3,6 +3,7 @@
   import type { createPlaylistToggleButtons } from "./PlaylistDownloader.toggle-buttons.svelte";
   import PlaylistOverrideBadge from "./PlaylistOverrideBadge.svelte";
   import PlaylistZipNameInput from "./PlaylistZipNameInput.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { attachSettingsOptions } from "@/lib/ui/polymer-utils";
   import { PlaylistOutputMode } from "@/types";
 
@@ -17,7 +18,7 @@
 <ytd-settings-options-renderer class="ytdl-section" {@attach attachSettingsOptions("Speed")}>
   <div
     class="ytdl-seg"
-    aria-label="Speed"
+    aria-label={t("Speed")}
     onkeydown={toggleButtons.speedKeydown}
     role="radiogroup"
     tabindex="-1"
@@ -34,7 +35,7 @@
 <ytd-settings-options-renderer class="ytdl-section" {@attach attachSettingsOptions("Output")}>
   <div
     class="ytdl-seg"
-    aria-label="Output"
+    aria-label={t("Output")}
     onkeydown={toggleButtons.outputKeydown}
     role="radiogroup"
     tabindex="-1"
@@ -58,7 +59,7 @@
 
 <div class="ytdl-section">
   <div id="ytdl-type-label" class="ytdl-section-title">
-    <span>Type</span>
+    <span>{t("Type")}</span>
     {#if playlist.isDownloadTypeOverridden}
       <PlaylistOverrideBadge />
     {/if}

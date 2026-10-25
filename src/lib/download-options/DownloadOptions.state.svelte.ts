@@ -51,7 +51,7 @@ export interface DownloadOptionsProps {
   downloadType: DownloadType;
   videoFormats: AdaptiveFormatItem[];
   videoFormatVariants: VideoData["videoFormatVariants"];
-  actualExtension: string;
+  menuExtension: string;
   codecPreferences: CodecPreferences;
   audioFormats: AdaptiveFormatItem[];
   captionTracks: CaptionTrack[];
@@ -152,7 +152,7 @@ export function createDownloadOptionsState(props: () => DownloadOptionsProps) {
   const videoFormatVariants = $derived(resolveVideoFormatVariants(props()));
   const videoOptionsParams = $derived({
     videoFormatVariants,
-    targetExtension: props().actualExtension,
+    targetExtension: props().menuExtension,
     codecPreferences: props().codecPreferences
   });
   // What the plan will download for the current pick, which both video pickers show
@@ -203,7 +203,7 @@ export function createDownloadOptionsState(props: () => DownloadOptionsProps) {
         audioFormats: props().audioFormats,
         selectedAudioTrackId: props().selectedAudioFormat?.audioTrack?.id,
         uniqueAudioLanguagesCount: uniqueAudioLanguages.length,
-        targetExtension: props().actualExtension,
+        targetExtension: props().menuExtension,
         codecPreferences: props().codecPreferences
       })
       : []
@@ -213,7 +213,7 @@ export function createDownloadOptionsState(props: () => DownloadOptionsProps) {
     const downloadedFormat = alignAudioFormatToExtension({
       audioFormats: props().audioFormats,
       currentFormat: props().selectedAudioFormat,
-      targetExtension: props().actualExtension,
+      targetExtension: props().menuExtension,
       codecPreferences: props().codecPreferences
     });
     return downloadedFormat ? toAudioFormatValue(downloadedFormat) : "";

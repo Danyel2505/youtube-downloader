@@ -5,6 +5,7 @@
   import SettingsGroup from "../ui/SettingsGroup.svelte";
   import SettingsRadioGroup from "../ui/SettingsRadioGroup.svelte";
   import SettingsSwitch from "../ui/SettingsSwitch.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
   import { findChoice } from "@/lib/utils/choices";
   import { MAX_FRAME_RATE_CHOICES } from "@/lib/youtube/select-video-quality";
@@ -23,22 +24,22 @@
     480: "SD"
   };
 
-  const qualityModeOptions = [
+  const qualityModeOptions = $derived([
     {
       value: VideoQualityMode.CurrentQuality,
-      label: "Match current player quality"
+      label: t("Match current player quality")
     },
     {
       value: VideoQualityMode.Best,
-      label: "Best available quality",
+      label: t("Best available quality"),
       sub: enhancedBitrate
     },
     {
       value: VideoQualityMode.Custom,
-      label: "Custom quality",
+      label: t("Custom quality"),
       sub: customQuality
     }
-  ] as const;
+  ] as const);
 
   const customQualityItems = $derived(
     VIDEO_QUALITIES.map(quality => ({
@@ -52,12 +53,12 @@
 {#snippet enhancedBitrate()}
   <label class="enhanced-bitrate">
     <div class="enhanced-bitrate-txt">
-      <span class="enhanced-bitrate-title">Enhanced bitrate</span>
+      <span class="enhanced-bitrate-title">{t("Enhanced bitrate")}</span>
       <span class="premium-badge">
         {@html sparkleIcon}
-        YouTube Premium
+        {t("YouTube Premium")}
       </span>
-      <span class="enhanced-bitrate-desc">Grab the higher-bitrate stream whenever YouTube offers it</span>
+      <span class="enhanced-bitrate-desc">{t("Grab the higher-bitrate stream whenever YouTube offers it")}</span>
     </div>
     <SettingsSwitch
       isChecked={options.enhancedBitrate}
@@ -76,7 +77,7 @@
     currentValue={String(options.videoQuality)}
     displayValue={`${options.videoQuality}p`}
     items={customQualityItems}
-    label="Quality"
+    label={t("Quality")}
     onSelect={selected => {
       void setOption({
         key: "videoQuality",
@@ -87,11 +88,11 @@
   />
 {/snippet}
 
-<SettingsGroup title="Video quality">
+<SettingsGroup title={t("Video quality")}>
   <SettingsRadioGroup
     name="quality-mode"
     isLegendHidden
-    legend="Video quality"
+    legend={t("Video quality")}
     onchange={value => {
       void setOption({
         key: "videoQualityMode",
@@ -108,7 +109,7 @@
         currentValue={options.maxFrameRate}
         displayValue={findChoice(MAX_FRAME_RATE_CHOICES, options.maxFrameRate)?.label ?? options.maxFrameRate}
         items={MAX_FRAME_RATE_CHOICES}
-        label="Max frame rate"
+        label={t("Max frame rate")}
         onSelect={selected => {
           const choice = findChoice(MAX_FRAME_RATE_CHOICES, selected);
           if (choice) {
@@ -119,7 +120,7 @@
           }
         }}
         {slideDuration}
-        subtitle="Falls back when a video has nothing under it"
+        subtitle={t("Falls back when a video has nothing under it")}
       />
     </div>
   {/if}

@@ -2,6 +2,7 @@ import { ensureProcessor } from "../handlers/processor";
 import { enqueueToPopupList } from "../queue/popup-list";
 import { getTabIdsForVideo } from "../queue/tab-tracker";
 import { TRANSCODE_VIDEO_ID_PREFIX } from "@/lib/download-pipeline/transcode-recent";
+import { resolveLocale, translate } from "@/lib/i18n/translate";
 import { MessageType, onMessage, sendMessage, sendMessageToTab } from "@/lib/messaging/messaging";
 import type { PipelineDownloadMessage } from "@/lib/messaging/messaging";
 import { OffscreenMessageType, sendToOffscreen } from "@/lib/messaging/offscreen-messaging";
@@ -46,10 +47,14 @@ async function notifyOnIdleIfNeeded({ data, tabIds }: NotifyOnIdleIfNeededParams
     return;
   }
 
+  const { language } = await optionsItem.getValue();
   await browser.notifications.create({
     type: NOTIFICATION_TYPE,
     iconUrl: browser.runtime.getURL(NOTIFICATION_ICON_PATH),
-    title: "Download complete",
+    title: translate({
+      locale: resolveLocale(language),
+      key: "Download complete"
+    }),
     message: data.filename
   });
 }

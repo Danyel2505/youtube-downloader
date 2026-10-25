@@ -46,11 +46,12 @@ export function runWorkerJob<T>({
         pendingJobReject = null;
         reject(new Error(message));
       },
-      [WorkerMessageType.Progress]({ videoId, progress, progressType, tabId }) {
+      [WorkerMessageType.Progress]({ videoId, progress, progressType, stage, tabId }) {
         sendMessage(MessageType.PipelineProgress, {
           videoId,
           progress,
           progressType,
+          stage,
           tabId
         }).catch(() => {});
       }
@@ -96,11 +97,12 @@ export function runMuxVideoAudio({ videoId, job }: RunMuxVideoAudioParams) {
             pendingJobReject = null;
             reject(new Error(message));
           },
-          [WorkerMessageType.Progress]({ videoId: progressVideoId, progress, progressType, tabId }) {
+          [WorkerMessageType.Progress]({ videoId: progressVideoId, progress, progressType, stage, tabId }) {
             sendMessage(MessageType.PipelineProgress, {
               videoId: progressVideoId,
               progress,
               progressType,
+              stage,
               tabId
             }).catch(() => {});
           }

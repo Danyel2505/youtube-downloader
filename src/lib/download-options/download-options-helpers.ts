@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import {
   audioContainers,
   buildFormatGroups,
@@ -23,15 +24,21 @@ export { buildUniqueAudioLanguages, byLabel, resolveCaptionOriginalLabel } from 
 export const DOWNLOAD_TYPES = [
   {
     value: DownloadType.VideoAndAudio,
-    label: "Video + Audio"
+    get label() {
+      return t("Video + Audio");
+    }
   },
   {
     value: DownloadType.Video,
-    label: "Video only"
+    get label() {
+      return t("Video only");
+    }
   },
   {
     value: DownloadType.Audio,
-    label: "Audio only"
+    get label() {
+      return t("Audio only");
+    }
   }
 ] as const;
 

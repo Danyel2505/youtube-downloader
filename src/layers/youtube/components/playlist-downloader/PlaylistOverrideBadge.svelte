@@ -1,8 +1,9 @@
-<script lang="ts"></script>
+<script lang="ts">  import { t } from "@/lib/i18n/i18n.svelte.ts";
+</script>
 
 <span class="ytdl-override-badge" role="status">
   <span class="ytdl-override-dot" aria-hidden="true"></span>
-  <span class="ytdl-visually-hidden">customized</span>
+  <span class="ytdl-visually-hidden">{t("customized")}</span>
 </span>
 
 <style>

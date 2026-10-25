@@ -1,4 +1,4 @@
-import type { DownloadType, ProgressType } from "./download-enums";
+import type { DownloadType, ProgressStage, ProgressType } from "./download-enums";
 import type { Prettify } from "./prettify";
 import type {
   CodecPreferences,
@@ -14,6 +14,7 @@ export type DownloadProgressEntry = Prettify<{
   isDone: boolean;
   progress: number;
   progressType: ProgressType | "";
+  stage?: ProgressStage;
   isFailed?: boolean;
   isUnavailable?: boolean;
   videoItag?: number;

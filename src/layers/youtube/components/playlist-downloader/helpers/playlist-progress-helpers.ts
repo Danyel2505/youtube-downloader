@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import type { DownloadProgressState } from "@/lib/ui/synced-stores.svelte";
 import { calculateWeightedProgress } from "@/lib/youtube/video-helpers";
 import { ProgressType, type DownloadRequest, type VideoData } from "@/types";
@@ -95,7 +96,7 @@ export function resolveCurrentPhaseLabel({
 
   const isZipBuildPhase = currentZipBundleId && downloadedCount >= totalCount;
   if (isZipBuildPhase) {
-    return "Building ZIP";
+    return t("Building ZIP");
   }
 
   if (!activeDownloadVideoId) {
@@ -105,9 +106,9 @@ export function resolveCurrentPhaseLabel({
   const entry = getProgressEntry(activeDownloadVideoId);
   const data = getVideoData(activeDownloadVideoId);
   const iVideo = activeDownloadRequests.findIndex(request => request.videoId === activeDownloadVideoId) + 1;
-  const videoLabel = data?.title ?? `Video ${iVideo}`;
+  const videoLabel = data?.title ?? t("Video {number}", { number: iVideo });
 
   return entry?.progressType === ProgressType.FFmpeg
-    ? `Processing ${videoLabel}`
-    : `Downloading ${videoLabel}`;
+    ? t("Processing {title}", { title: videoLabel })
+    : t("Downloading {title}", { title: videoLabel });
 }

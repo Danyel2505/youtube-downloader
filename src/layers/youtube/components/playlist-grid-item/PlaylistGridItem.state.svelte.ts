@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
 import { performCancelDownload } from "@/lib/ui/cancel-download";
@@ -147,7 +148,8 @@ function estimateVideoSize({ video, options, playlistDownloadType }: {
 }) {
   const selectedAudio = selectPlaylistAudioFormat(video.audioFormats);
   const audioBytes = Number(selectedAudio?.contentLength ?? 0);
-  const resolvedType = resolvePerVideoDownloadType(video, playlistDownloadType);  if (resolvedType === DownloadType.Audio) {
+  const resolvedType = resolvePerVideoDownloadType(video, playlistDownloadType);
+  if (resolvedType === DownloadType.Audio) {
     return audioBytes;
   }
 
@@ -155,7 +157,8 @@ function estimateVideoSize({ video, options, playlistDownloadType }: {
     videoData: video,
     options
   });
-  const videoBytes = Number(videoFormat?.contentLength ?? 0);  if (resolvedType === DownloadType.Video) {
+  const videoBytes = Number(videoFormat?.contentLength ?? 0);
+  if (resolvedType === DownloadType.Video) {
     return videoBytes;
   }
 
@@ -316,7 +319,10 @@ export function createPlaylistGridItemState({ playlistId, gridTitle }: CreatePla
   });
   const estimatedSizeLabel = $derived(estimatedTotalBytes > 0 ? `~${formatSize(estimatedTotalBytes)}` : "");
 
-  const aggregateProgress = $derived.by(() => {
+  const aggregateProgress = $derived.by((): number | {
+    progress: number;
+    progressType: ProgressType | "";
+  } => {
     if (loadedVideos.length === 0) {
       return 0;
     }
@@ -414,7 +420,7 @@ export function createPlaylistGridItemState({ playlistId, gridTitle }: CreatePla
 
       const contents = await fetchPlaylistContents(playlistId);
       if (!contents || contents.videoIds.length === 0) {
-        errorMessage = "Could not fetch playlist";
+        errorMessage = t("Could not fetch playlist");
         metadataPromise = null;
         return [];
       }
@@ -446,7 +452,7 @@ export function createPlaylistGridItemState({ playlistId, gridTitle }: CreatePla
 
     if (videos.length === 0) {
       status = PlaylistGridStatus.Failed;
-      errorMessage = errorMessage || "No downloadable videos in playlist";
+      errorMessage = errorMessage || t("No downloadable videos in playlist");
       return;
     }
 
@@ -472,7 +478,7 @@ export function createPlaylistGridItemState({ playlistId, gridTitle }: CreatePla
       });
     } catch {
       status = PlaylistGridStatus.Failed;
-      errorMessage = "Failed to start downloads";
+      errorMessage = t("Failed to start downloads");
     }
   }
 

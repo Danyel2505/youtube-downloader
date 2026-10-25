@@ -1,12 +1,13 @@
 import { buildInitialDownloadState } from "./initial-download-state";
 import { buildClickHandler } from "./watch-button-click";
-import { percentFormatter, WatchButtonLayout } from "./watch-button-types";
+import { WatchButtonLayout } from "./watch-button-types";
 import { buildChevronData, buildDownloadData } from "./watch-button-view-model";
 import { createButtonElementEffects } from "./WatchButton.button-effects.svelte";
 import { createMessageEffects } from "./WatchButton.message-effects.svelte";
 import { createPanelEffects } from "./WatchButton.panel-effects.svelte";
 import { PrimaryButtonState } from "@/lib/ui/primary-button.svelte";
 import { interruptedDownloadStore, statusProgressSignal } from "@/lib/ui/synced-stores.svelte";
+import { formatPercent } from "@/lib/youtube/progress-label";
 import { calculateWeightedProgress } from "@/lib/youtube/video-helpers";
 import { type CodecPreferences, type DownloadType, type VideoData, type YtButtonViewModelElement } from "@/types";
 import { untrack } from "svelte";
@@ -62,7 +63,7 @@ export function createWatchButtonState(params: {
     return isError ? 1 : 0;
   });
 
-  const formattedProgress = $derived(percentFormatter.format(effectiveProgress));
+  const formattedProgress = $derived(formatPercent(effectiveProgress));
   const isProgressNonZero = $derived(effectiveProgress > 0);
 
   const viewState = $derived({
@@ -76,6 +77,7 @@ export function createWatchButtonState(params: {
     downloadProgress: formattedProgress,
     isProgressNonZero,
     progressType: downloadProgressType,
+    stage: statusEntry?.stage,
     filename: defaultFilename,
     quality: defaultQuality,
     isDownloadable: params.videoData.isDownloadable

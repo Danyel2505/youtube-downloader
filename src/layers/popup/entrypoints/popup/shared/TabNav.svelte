@@ -40,7 +40,9 @@
     indWidth = indicatorWidth;
   }
 
+  // The tab widths follow the labels, so a language change moves the indicator too
   $effect(() => {
+    void tabs.map(tab => tab.label);
     updateIndicator(activeTab);
   });
 

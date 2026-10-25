@@ -1,10 +1,12 @@
 <script lang="ts">
   import downloadIcon from "../icons/download.svg?raw";
   import openInNewIcon from "../icons/open-in-new.svg?raw";
-  import { bindDownloadAccessors, getVideoStatusLabel } from "./active-downloads-helpers";
+  import { bindDownloadAccessors, getVideoStartState, type VideoStartState } from "./active-downloads-helpers";
   import DownloadItem from "./DownloadItem.svelte";
   import RecentDownloadItem from "./recent/RecentDownloadItem.svelte";
   import { isActiveFromCurrentTab, isRecentFromCurrentTab } from "./youtube-tab";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
+  import { DownloadType, ProgressType } from "@/types";
   import type { DownloadProgressEntry, RecentDownloadEntry, VideoDetail, VideoQueueItem } from "@/types";
   import { SvelteMap } from "svelte/reactivity";
 
@@ -15,7 +17,6 @@
     videoOnlyList: string[];
     videoDetails: Record<string, VideoDetail>;
     statusProgress: Record<string, DownloadProgressEntry>;
-    percentFormatter: Intl.NumberFormat;
     currentTabId?: number;
     currentSourceUrl?: string;
     recentDownloads: RecentDownloadEntry[];
@@ -29,16 +30,24 @@
 
   const {
     isFFmpegReady, videoDownloads, musicList, videoOnlyList,
-    videoDetails, statusProgress, percentFormatter, currentTabId, currentSourceUrl,
+    videoDetails, statusProgress, currentTabId, currentSourceUrl,
     recentDownloads, now, pendingFormatChangeId,
     onCancel, onShowRecentInFolder, onChangeFormat, onRemoveRecent
   }: Props = $props();
+
+  function getDownloadType(videoId: string): DownloadType {
+    if (musicList.includes(videoId)) {
+      return DownloadType.Audio;
+    }
+
+    return videoOnlyList.includes(videoId) ? DownloadType.Video : DownloadType.VideoAndAudio;
+  }
 
   const accessors = $derived(
     bindDownloadAccessors({
       statusProgress,
       videoDetails,
-      percentFormatter
+      getDownloadType
     })
   );
 
@@ -125,7 +134,7 @@
   const thisTabCount = $derived(thisTab.individualIds.length + thisTab.zipGroups.length + thisTab.recent.length);
   const otherTabsCount = $derived(otherTabs.individualIds.length + otherTabs.zipGroups.length);
 
-  function videoStatusLabel(videoId: string): string | null {
+  function videoStartState(videoId: string): VideoStartState | null {
     const i = videoDownloadIndex.get(videoId);
     if (i === undefined) {
       return null;
@@ -135,7 +144,7 @@
       return null;
     }
 
-    return getVideoStatusLabel({
+    return getVideoStartState({
       i,
       isFFmpegReady
     });
@@ -150,6 +159,7 @@
     channel={detail?.channel}
     downloadedBytes={entry?.downloadedBytes}
     filename={accessors.filename(videoId)}
+    isProcessing={entry?.progressType === ProgressType.FFmpeg}
     lengthSeconds={detail?.lengthSeconds}
     oncancel={() => onCancel([videoId])}
     progress={accessors.progress(videoId)}
@@ -157,7 +167,8 @@
     quality={accessors.quality(videoId)}
     {showTabActions}
     sourceUrl={detail?.sourceUrl}
-    statusLabel={videoStatusLabel(videoId)}
+    stage={entry?.stage}
+    startState={videoStartState(videoId)}
     tabId={detail?.tabId}
     thumbnailUrl={detail?.thumbnailUrl}
     title={detail?.title}
@@ -172,7 +183,7 @@
       <span class="zip-group-label" data-tooltip="{group.playlistTitle}.zip">
         → {group.playlistTitle}.zip
       </span>
-      <ul class="download-list" aria-label="Videos in {group.playlistTitle}.zip">
+      <ul class="download-list" aria-label={t("Videos in {title}.zip", { title: group.playlistTitle })}>
         {#each group.videoIds as videoId (videoId)}
           <li class="download-item">
             {@render renderCard(videoId, showTabActions)}
@@ -193,7 +204,7 @@
   {/if}
 
   {#if partition.recent.length > 0}
-    <ul class="recent-list" aria-label="Recent downloads from this tab">
+    <ul class="recent-list" aria-label={t("Recent downloads from this tab")}>
       {#each partition.recent as entry (entry.id)}
         <li>
           <RecentDownloadItem
@@ -216,7 +227,7 @@
     <header class="section-header">
       <h2 id="this-tab-heading" class="section-title">
         <span class="section-icon" aria-hidden="true">{@html downloadIcon}</span>
-        This tab
+        {t("This tab")}
         <span class="section-count">{thisTabCount}</span>
       </h2>
     </header>
@@ -231,7 +242,7 @@
     <header class="section-header">
       <h2 id="other-tabs-heading" class="section-title">
         <span class="section-icon" aria-hidden="true">{@html openInNewIcon}</span>
-        Other tabs
+        {t("Other tabs")}
         <span class="section-count">{otherTabsCount}</span>
       </h2>
     </header>

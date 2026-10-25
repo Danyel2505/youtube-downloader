@@ -1,6 +1,7 @@
 <script lang="ts">
   import PolymerSelect from "../polymer-select/PolymerSelect.svelte";
   import { createTrackChoiceState } from "./TrackChoice.svelte.ts";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { attachIcon } from "@/lib/ui/polymer-utils";
   import { PanelTrackMode, YtIconName } from "@/types";
   import type { LabeledOption, TrackKind } from "@/types";
@@ -51,7 +52,7 @@
     <div
       class="track-seg"
       class:is-inert={state.isAlternativeModeAbsent}
-      aria-label="{state.kindLabel} source"
+      aria-label={t("{kind} source", { kind: state.kindLabel })}
       onkeydown={state.handleSegmentedKeydown}
       role="radiogroup"
       tabindex="-1"
@@ -73,7 +74,7 @@
       </div>
       <div class="track-follow-body">
         <span class="track-follow-value">{playerLabel ?? "-"}</span>
-        <span class="track-follow-sub">Synced with player · changes as you switch tracks</span>
+        <span class="track-follow-sub">{t("Synced with player · changes as you switch tracks")}</span>
       </div>
     </div>
   {:else if mode === PanelTrackMode.Original}

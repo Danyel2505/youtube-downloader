@@ -1,4 +1,5 @@
 import { listChoices, type Choice } from "./choices";
+import { tText } from "@/lib/i18n/i18n.svelte.ts";
 import { AudioCodecPreference, DynamicRangePreference, VideoCodecPreference } from "@/types";
 import type { CodecPreferences, Prettify } from "@/types";
 
@@ -80,7 +81,7 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     subtitleCodec: SUBTITLE_CODEC_MOV_TEXT
   },
   mov: {
-    videoCodecs: new Set([CODEC_AVC1, CODEC_HVC1, CODEC_HEV1, CODEC_AV01, CODEC_MP4V]),
+    videoCodecs: new Set([CODEC_AVC1, CODEC_HVC1, CODEC_HEV1, CODEC_MP4V]),
     audioCodecs: new Set([CODEC_MP4A, CODEC_AC3, CODEC_EC3, CODEC_FLAC]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
@@ -456,16 +457,16 @@ export function resolveDynamicRangePreference(videoMimeType: string) {
 export function describeVideoCodec(videoMimeType: string) {
   const isHdr = isHdrMimeType(videoMimeType);
   if (isHdr) {
-    return DYNAMIC_RANGE_PREFERENCES[DynamicRangePreference.Hdr].description;
+    return tText(DYNAMIC_RANGE_PREFERENCES[DynamicRangePreference.Hdr].description);
   }
 
   const preference = resolveVideoCodecPreference(videoMimeType);
-  return preference ? VIDEO_CODEC_PREFERENCES[preference].description : undefined;
+  return preference ? tText(VIDEO_CODEC_PREFERENCES[preference].description) : undefined;
 }
 
 export function describeAudioCodec(audioMimeType: string) {
   const preference = resolveAudioCodecPreference(audioMimeType);
-  return preference ? AUDIO_CODEC_PREFERENCES[preference].description : undefined;
+  return preference ? tText(AUDIO_CODEC_PREFERENCES[preference].description) : undefined;
 }
 
 export function isAudioCodecPreferredForContainer({
@@ -508,7 +509,7 @@ export function resolveAudioCodec({ audioMimeType, targetExtension }: {
 }
 
 // MP4/MKV copy in video they don't list natively; other containers would switch to MKV
-export function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
+function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
   videoMimeType: string;
   targetExtension: string;
 }) {
@@ -518,6 +519,21 @@ export function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
   }
 
   return videoCodecsFor(containerSpec).has(extractBaseCodec(videoMimeType)) || !!containerSpec.allowNonNativeVideo;
+}
+
+const FALLBACK_CONTAINER = "mkv";
+
+// A video the chosen container can't hold is saved as MKV instead, so a codec picked by hand
+// keeps working under MOV or WebM rather than being swapped for another one
+export function resolveContainerForVideo({ videoMimeType, userExtension }: {
+  videoMimeType: string;
+  userExtension: string;
+}) {
+  const isHeld = isVideoAllowedInContainer({
+    videoMimeType,
+    targetExtension: userExtension
+  });
+  return isHeld ? userExtension : FALLBACK_CONTAINER;
 }
 
 const HVC1_TAGGED_EXTENSIONS = new Set(["mp4", "mov", "m4v"]);
@@ -551,7 +567,7 @@ export function getOutputExtension({ videoMimeType, audioMimeType, userExtension
   const audioOk = isAudioNative || isFallbackAudioPresent;
   const isCompatible = videoOk && audioOk;
 
-  return isCompatible ? userExtension : "mkv";
+  return isCompatible ? userExtension : FALLBACK_CONTAINER;
 }
 
 export function isVideoCodecPreferredForContainer({

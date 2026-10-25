@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { sendButtonData } from "@/lib/ui/polymer-utils";
 import { CHILD_LIST_SUBTREE } from "@/lib/utils/dom";
 import {
@@ -13,7 +14,7 @@ export function attachCloseButton(elTarget: Element) {
   const closeData: ButtonViewModelData = {
     iconName: IconName.Close,
     title: "",
-    accessibilityText: "Close",
+    accessibilityText: t("Close"),
     style: ButtonStyle.Mono,
     type: ButtonType.Tonal,
     buttonSize: ButtonSize.Default,
@@ -39,7 +40,7 @@ export function attachCloseButton(elTarget: Element) {
         elButton: elTarget,
         data: {
           ...closeData,
-          tooltip: "Close"
+          tooltip: t("Close")
         }
       });
     });

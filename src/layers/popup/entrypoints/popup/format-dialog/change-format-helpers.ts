@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
 import {
   audioContainers,
@@ -116,7 +117,7 @@ export function buildAvailableTargetGroups({ entry }: BuildAvailableTargetGroups
 
   return withFlags.map(group => group.heading === FORMAT_GROUP_AUDIO ? {
     ...group,
-    caption: "Extract audio as"
+    caption: t("Extract audio as")
   } : group);
 }
 

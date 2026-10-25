@@ -3,6 +3,7 @@
   import type { createPlaylistDownloaderState } from "./PlaylistDownloader.state.svelte";
   import PlaylistOverrideBadge from "./PlaylistOverrideBadge.svelte";
   import PlaylistResetLink from "./PlaylistResetLink.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { toInlineLabeledOption } from "@/lib/utils/choices";
   import { listContainerChoices } from "@/lib/utils/containers";
   import { DownloadType, VideoQualityMode } from "@/types";
@@ -13,16 +14,16 @@
 
   const { playlist }: Props = $props();
 
-  const videoExtOptions = listContainerChoices("video").map(toInlineLabeledOption);
-  const audioExtOptions = listContainerChoices("audio").map(toInlineLabeledOption);
+  const videoExtOptions = $derived(listContainerChoices("video").map(toInlineLabeledOption));
+  const audioExtOptions = $derived(listContainerChoices("audio").map(toInlineLabeledOption));
   const qualityOptions = $derived([
     {
       value: VideoQualityMode.Best,
-      label: "Best quality"
+      label: t("Best quality")
     },
     ...playlist.availableQualities.map(height => ({
       value: String(height),
-      label: !playlist.isRevealingAll && height <= playlist.guaranteedQuality ? `${height}p` : `Up to ${height}p`
+      label: !playlist.isRevealingAll && height <= playlist.guaranteedQuality ? `${height}p` : t("Up to {height}p", { height })
     }))
   ]);
 
@@ -37,7 +38,7 @@
   <PolymerSelect
     id="playlist-video-quality"
     disabled={isQualityDisabled}
-    label="Video quality"
+    label={t("Video quality")}
     onchange={value => (playlist.effectiveQuality = value)}
     options={qualityOptions}
     value={playlist.effectiveQuality}
@@ -51,7 +52,7 @@
   <PolymerSelect
     id="playlist-video-ext"
     disabled={isVideoExtDisabled}
-    label="Video format"
+    label={t("Video format")}
     onchange={value => (playlist.effectiveVideoExt = value)}
     options={videoExtOptions}
     value={playlist.effectiveVideoExt}
@@ -65,7 +66,7 @@
   <PolymerSelect
     id="playlist-audio-ext"
     disabled={isAudioExtDisabled}
-    label="Audio format"
+    label={t("Audio format")}
     onchange={value => (playlist.effectiveAudioExt = value)}
     options={audioExtOptions}
     value={playlist.effectiveAudioExt}

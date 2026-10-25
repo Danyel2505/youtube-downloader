@@ -15,6 +15,7 @@
     panelCaptionMode: PanelTrackMode;
     filename: string;
     extension: string;
+    actualExtension: string;
     isDownloading: boolean;
     ondownloadtypechange: (type: import("@/types").DownloadType) => void;
     onvideoformatchange: (format: AdaptiveFormatItem) => void;
@@ -32,7 +33,7 @@
     downloadType, videoFormats, videoFormatVariants, audioFormats, captionTracks, translationLanguages,
     selectedVideoFormat, selectedAudioFormat, selectedCaptionTrack,
     panelAudioMode, panelAudioCustomLanguage, panelCaptionMode,
-    filename, extension, actualExtension, codecPreferences, isDownloading,
+    filename, extension, actualExtension, menuExtension, codecPreferences, isDownloading,
     ondownloadtypechange, onvideoformatchange, onaudioformatchange,
     onaudiomodechange, onaudiocustomchange, oncaptionmodechange,
     oncaptionchange, onfilenamechange, onextensionchange, onvalidationchange
@@ -42,7 +43,7 @@
     downloadType,
     videoFormats,
     videoFormatVariants,
-    actualExtension,
+    menuExtension,
     codecPreferences,
     audioFormats,
     captionTracks,

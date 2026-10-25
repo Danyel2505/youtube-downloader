@@ -5,6 +5,7 @@ import {
   CaptionLanguageMode,
   DownloadType,
   DynamicRangePreference,
+  LanguagePreference,
   MaxFrameRate,
   PlaylistDownloadMode,
   PlaylistOutputMode,
@@ -20,6 +21,7 @@ const DEFAULT_VIDEO_EXTENSION = "mkv";
 const DEFAULT_CUSTOM_LANGUAGE = "en";
 
 export const INITIAL_OPTIONS: Options = {
+  language: LanguagePreference.Auto,
   ext: {
     audio: AUTO_EXTENSION,
     video: DEFAULT_VIDEO_EXTENSION

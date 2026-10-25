@@ -1,7 +1,13 @@
 import { executeMuxPhases, tryCheckOutput } from "./mux-handler-exec";
 import { cleanupMuxFiles, writeMuxInputFiles } from "./mux-handler-files";
 import { reencodeVideo, REENCODE_PROGRESS_SHARE, removeReencodeFiles } from "./mux-handler-reencode";
-import { postFileResult, state, tryRmdir, tryUnmount } from "./mux-state";
+import {
+  postFileResult,
+  reportFFmpegProgress,
+  state,
+  tryRmdir,
+  tryUnmount
+} from "./mux-state";
 import { cleanupOpfsOutput, createOpfsOutputFs, createOpfsOutputHandle } from "./opfs-output-fs";
 import type { MuxVideoAudioJob } from "@/lib/download-pipeline/mux-worker-types";
 import {
@@ -11,6 +17,7 @@ import {
   resolveMultiTrackExtension
 } from "@/lib/utils/containers";
 import { createLogger, LogScope } from "@/lib/utils/logger";
+import { ProgressStage } from "@/types";
 
 const log = createLogger(LogScope.Ffmpeg);
 
@@ -79,6 +86,7 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
 
   state.progressOffset = 0;
   state.progressScale = useIntermediateMkv ? 0.5 : 1;
+  state.progressStage = ProgressStage.Merging;
 
   const { audioFilenames, subtitleFilenames } = writeMuxInputFiles({
     videoId,
@@ -120,6 +128,8 @@ export async function handleMuxVideoAudio(job: MuxVideoAudioJob) {
       muxVideoFilename = `${reencodedDir}/${reencodedFile.name}`;
       state.progressOffset = REENCODE_PROGRESS_SHARE;
       state.progressScale = 1 - REENCODE_PROGRESS_SHARE;
+      state.progressStage = ProgressStage.Merging;
+      reportFFmpegProgress(REENCODE_PROGRESS_SHARE);
     }
 
     success = executeMuxPhases({

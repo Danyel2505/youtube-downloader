@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n/i18n.svelte.ts";
 import {
   ButtonSize,
   ButtonState,
@@ -16,15 +17,15 @@ export const ACTION_BUTTON_IDS = {
 export function buildDeselectAllData(isDisabled: boolean) {
   return {
     iconName: IconName.None,
-    title: "Clear",
-    accessibilityText: "Clear selection",
+    title: t("Clear"),
+    accessibilityText: t("Clear selection"),
     style: ButtonStyle.CallToAction,
     type: ButtonType.Text,
     buttonSize: ButtonSize.XSmall,
     state: isDisabled ? ButtonState.Disabled : ButtonState.Active,
     isFullWidth: false,
     isDisabled,
-    tooltip: "Clear selection"
+    tooltip: t("Clear selection")
   };
 }
 
@@ -61,9 +62,9 @@ export function buildDownloadAllData({
   revealedVideoCount: number;
 }) {
   const label = isRevealingAll
-    ? `Revealing hidden videos (${revealedVideoCount})`
-    : "Download whole playlist";
-  const tooltip = isRevealingAll ? "Stop revealing" : "Reveal all videos and download";
+    ? t("Revealing hidden videos ({count})", { count: revealedVideoCount })
+    : t("Download whole playlist");
+  const tooltip = isRevealingAll ? t("Stop revealing") : t("Reveal all videos and download");
   return {
     iconName: isRevealingAll ? IconName.Close : IconName.Download,
     title: label,
@@ -81,14 +82,14 @@ export function buildDownloadAllData({
 export function buildStopAllData() {
   return {
     iconName: IconName.Close,
-    title: "Stop all",
-    accessibilityText: "Stop all downloads",
+    title: t("Stop all"),
+    accessibilityText: t("Stop all downloads"),
     style: ButtonStyle.Mono,
     type: ButtonType.Text,
     buttonSize: ButtonSize.Default,
     state: ButtonState.Active,
     isFullWidth: false,
     isDisabled: false,
-    tooltip: "Stop all downloads"
+    tooltip: t("Stop all downloads")
   };
 }

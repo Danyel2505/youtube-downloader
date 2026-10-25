@@ -3,6 +3,7 @@
   import CompletionSettings from "./sections/CompletionSettings.svelte";
   import DownloadTypeSettings from "./sections/DownloadTypeSettings.svelte";
   import FormatSettings from "./sections/FormatSettings.svelte";
+  import LanguageSettings from "./sections/LanguageSettings.svelte";
   import LogsSettings from "./sections/LogsSettings.svelte";
   import PlaylistSettings from "./sections/PlaylistSettings.svelte";
   import VideoQualitySettings from "./sections/VideoQualitySettings.svelte";
@@ -18,6 +19,7 @@
 </script>
 
 <div class="settings-container">
+  <LanguageSettings {options} />
   <FormatSettings {options} slideDuration={SLIDE_DURATION} />
   <DownloadTypeSettings {options} />
   <VideoQualitySettings {options} slideDuration={SLIDE_DURATION} />

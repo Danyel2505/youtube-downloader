@@ -8,7 +8,7 @@ import {
 import { addToPlaylistBundle } from "./playlist-bundle";
 import { applyAudioFfmpeg } from "./process-single-media-ffmpeg";
 import { getFileExtension } from "@/lib/utils/containers";
-import { DownloadType, ProgressType } from "@/types";
+import { DownloadType, ProgressStage, ProgressType } from "@/types";
 import type { Prettify, ProcessStreamData } from "@/types";
 
 const WEBM_AUDIO_EXTENSION = "weba";
@@ -80,6 +80,13 @@ export async function processSingleMedia({ item, isCancelled }: ProcessSingleMed
     return;
   }
 
+  await reportProgress({
+    videoId,
+    progress: FFMPEG_PROGRESS_CAP,
+    progressType: ProgressType.FFmpeg,
+    stage: ProgressStage.Saving,
+    tabId
+  });
   await triggerDownload({
     data,
     filenameOutput,

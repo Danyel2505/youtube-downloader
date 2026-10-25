@@ -4,6 +4,7 @@
   import type { SlidingSettingsProps } from "../settings-props";
   import SettingsDropDown from "../ui/SettingsDropDown.svelte";
   import SettingsGroup from "../ui/SettingsGroup.svelte";
+  import { t } from "@/lib/i18n/i18n.svelte.ts";
   import { setOption } from "@/lib/storage/storage";
   import { findChoice, type Choice } from "@/lib/utils/choices";
   import {
@@ -17,7 +18,7 @@
 
   const { options, slideDuration }: SlidingSettingsProps = $props();
 
-  const CODEC_SUBTITLE = "Used when the container supports it";
+  const CODEC_SUBTITLE = "Used when the container supports it" as const;
 
   type FormatSettingRow = {
     label: string;
@@ -78,40 +79,40 @@
   const rows = $derived([
     containerRow({
       kind: "video",
-      label: "Video container",
+      label: t("Video container"),
       icon: videoIcon
     }),
     optionRow({
       key: "videoCodec",
-      label: "Video codec",
-      subtitle: CODEC_SUBTITLE,
+      label: t("Video codec"),
+      subtitle: t(CODEC_SUBTITLE),
       icon: videoIcon,
       choices: VIDEO_CODEC_CHOICES
     }),
     optionRow({
       key: "dynamicRange",
-      label: "Dynamic range",
-      subtitle: "HDR comes in VP9 and AV1",
+      label: t("Dynamic range"),
+      subtitle: t("HDR comes in VP9 and AV1"),
       icon: videoIcon,
       choices: DYNAMIC_RANGE_CHOICES
     }),
     optionRow({
       key: "audioCodec",
-      label: "Audio codec",
-      subtitle: CODEC_SUBTITLE,
+      label: t("Audio codec"),
+      subtitle: t(CODEC_SUBTITLE),
       icon: audioIcon,
       choices: AUDIO_CODEC_CHOICES
     }),
     containerRow({
       kind: "audio",
-      label: "Audio container",
-      subtitle: "Used for audio-only downloads",
+      label: t("Audio container"),
+      subtitle: t("Used for audio-only downloads"),
       icon: audioIcon
     })
   ]);
 </script>
 
-<SettingsGroup title="Format">
+<SettingsGroup title={t("Format")}>
   {#each rows as row (row.label)}
     <SettingsDropDown
       currentValue={row.value}
