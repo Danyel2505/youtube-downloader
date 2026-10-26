@@ -1,4 +1,5 @@
 import { describeActivity, formatPercent } from "@/lib/youtube/progress-label";
+import type { describeConversion } from "@/lib/youtube/progress-label";
 import type { DownloadType, ProgressStage, ProgressType, Prettify } from "@/types";
 import {
   attachPrimaryButton as attachPrimaryButtonElement,
@@ -12,6 +13,7 @@ export type FooterParams = Prettify<{
   readonly displayProgress: number;
   readonly progressType: ProgressType | "";
   readonly stage?: ProgressStage;
+  readonly conversion?: ReturnType<typeof describeConversion>;
   readonly downloadType?: DownloadType;
   readonly getIsDownloadable: () => boolean;
   readonly getIsFilenameValid: () => boolean;
@@ -30,6 +32,16 @@ export function createFooterState(params: FooterParams) {
     return isProgressZero ? activity : `${formatPercent(params.displayProgress / 100)} - ${activity}`;
   });
 
+  const conversionLabel = $derived.by(() => {
+    const { conversion } = params;
+    if (!conversion) {
+      return "";
+    }
+
+    const processor = conversion.processor ? ` (${conversion.processor})` : "";
+    return `${formatPercent(conversion.fraction)} - ${conversion.label}${processor}`;
+  });
+
   function attachPrimaryButton(elButton: Element) {
     attachPrimaryButtonElement({
       elButton,
@@ -43,6 +55,9 @@ export function createFooterState(params: FooterParams) {
   return {
     get downloadingLabel() {
       return downloadingLabel;
+    },
+    get conversionLabel() {
+      return conversionLabel;
     },
     attachPrimaryButton
   };

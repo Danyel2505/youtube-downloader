@@ -8,8 +8,9 @@
   import { focusOrOpenTab } from "./youtube-tab";
   import { getLocale, t } from "@/lib/i18n/i18n.svelte.ts";
   import { formatPercent } from "@/lib/youtube/progress-label";
+  import type { describeConversion } from "@/lib/youtube/progress-label";
   import { resolveDisplayThumbnailUrl } from "@/lib/youtube/thumbnail-url";
-  import { ProgressStage } from "@/types";
+  import type { ProgressStage } from "@/types";
 
   interface Props {
     filename: string;
@@ -17,6 +18,7 @@
     progressLabel: string;
     isProcessing: boolean;
     stage?: ProgressStage;
+    conversion?: ReturnType<typeof describeConversion>;
     startState?: VideoStartState | null;
     quality?: string;
     videoId?: string;
@@ -34,7 +36,7 @@
   }
 
   const {
-    filename, progress, progressLabel, isProcessing, stage, startState, quality, videoId,
+    filename, progress, progressLabel, isProcessing, stage, conversion, startState, quality, videoId,
     title, channel, lengthSeconds, thumbnailUrl, downloadedBytes, totalBytes, bytesPerSecond,
     sourceUrl, tabId, showTabActions = false, oncancel
   }: Props = $props();
@@ -61,7 +63,7 @@
   );
   const isQueued = $derived(progress === null && startState === VideoStartState.Queued);
   // Converting to H.265 reports real progress, so it gets a bar that fills instead of a spinner
-  const isConverting = $derived(stage === ProgressStage.Extracting || stage === ProgressStage.Reencoding);
+  const isConverting = $derived(!!conversion);
   const isIndeterminate = $derived((isProcessing || isStarting) && !(isConverting && progress !== null));
   const hasByteReadout = $derived(
     !isProcessing
@@ -312,6 +314,20 @@
       {:else}
         <span class="dl-prog-stat">{progressLabel}</span>
       {/if}
+    </div>
+  {/if}
+  {#if conversion}
+    <div class="dl-prog-bar">
+      <WavyProgress value={conversion.fraction * 100} />
+    </div>
+    <div class="dl-prog-line">
+      <span class="dl-prog-pct">{formatPercent(conversion.fraction)}</span>
+      <span class="dl-conversion-detail">
+        <span class="dl-prog-stat">{conversion.label}</span>
+        {#if conversion.processor}
+          <span class="dl-chip dl-chip-accent">{conversion.processor}</span>
+        {/if}
+      </span>
     </div>
   {/if}
 </article>
@@ -572,6 +588,13 @@
     font-size: 0.71875rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .dl-conversion-detail {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
   }
 
   .state-pill {

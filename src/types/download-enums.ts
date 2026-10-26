@@ -57,9 +57,17 @@ export const ProgressType = {
 export type ProgressType = (typeof ProgressType)[keyof typeof ProgressType];
 
 // What the processing phase is doing right now, so the UI can say it instead of just "Processing"
+export const ReencodeEngine = {
+  Gpu: "gpu",
+  Cpu: "cpu"
+} as const;
+
+export type ReencodeEngine = (typeof ReencodeEngine)[keyof typeof ReencodeEngine];
+
 export const ProgressStage = {
   Extracting: "extracting",
-  Reencoding: "reencoding",
+  ReencodingGpu: "reencoding-gpu",
+  ReencodingCpu: "reencoding-cpu",
   Merging: "merging",
   Saving: "saving"
 } as const;

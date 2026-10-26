@@ -2,8 +2,12 @@ import { isKeyFrame, openIvf, resolveDecoderCodec } from "./ivf-reader";
 import type { IvfFrame, IvfHeader } from "./ivf-reader";
 import { createLogger, LogScope } from "@/lib/utils/logger";
 import { createStallChecker } from "@/lib/utils/stream-stall";
-import { buildHevcEncoderConfig, isHevcEncoderConfigSupported } from "@/lib/video-reencode/hevc-config";
-import type { Prettify, VideoReencodeSpec } from "@/types";
+import {
+  buildHevcEncoderConfig,
+  isHevcEncoderConfigSupported,
+  resolveHevcEncoder
+} from "@/lib/video-reencode/hevc-config";
+import type { Prettify, ReencodeEngine, VideoReencodeSpec } from "@/types";
 
 const log = createLogger(LogScope.Ffmpeg);
 
@@ -26,6 +30,7 @@ type ReencodeProgress = Prettify<{
 type ReencodeContext = Prettify<{
   spec: VideoReencodeSpec;
   header: IvfHeader;
+  hardwareAcceleration: HardwareAcceleration | undefined;
   encoder: VideoEncoder;
   decoder: VideoDecoder;
   pendingFrames: VideoFrame[];
@@ -41,6 +46,7 @@ type ReencodeIvfToHevcParams = Prettify<{
   sourceMimeType: string;
   spec: VideoReencodeSpec;
   output: FileSystemSyncAccessHandle;
+  onEngine: (engine: ReencodeEngine) => void;
   onProgress: (fraction: number) => void;
   throwIfCancelled: () => void;
 }>;
@@ -59,12 +65,13 @@ function untilDequeueOrFailure({ failure }: ReencodeContext, target: VideoDecode
   return Promise.race([waitForDequeue(target), failure]);
 }
 
-async function configureEncoder({ spec, encoder, progress }: ReencodeContext, frame: VideoFrame) {
+async function configureEncoder({ spec, encoder, progress, hardwareAcceleration }: ReencodeContext, frame: VideoFrame) {
   const config = buildHevcEncoderConfig({
     width: toEvenDimension(frame.displayWidth),
     height: toEvenDimension(frame.displayHeight),
     frameRate: spec.frameRate,
-    bitrate: spec.bitrate
+    bitrate: spec.bitrate,
+    hardwareAcceleration
   });
   const isSupported = await isHevcEncoderConfigSupported(config);
   log.info("H.265 encoder config", {
@@ -254,16 +261,50 @@ function createCodecs({ output, pendingFrames, progress, rejectFailure, touchAct
   };
 }
 
+async function chooseEncoder({ header, spec }: {
+  header: IvfHeader;
+  spec: VideoReencodeSpec;
+}) {
+  const width = toEvenDimension(header.width);
+  const height = toEvenDimension(header.height);
+  const encoder = await resolveHevcEncoder(
+    buildHevcEncoderConfig({
+      width,
+      height,
+      frameRate: spec.frameRate,
+      bitrate: spec.bitrate
+    })
+  );
+  log.info("H.265 encoder choice", {
+    engine: encoder?.engine ?? "none",
+    hardwareAcceleration: encoder?.config.hardwareAcceleration,
+    width,
+    height
+  });
+
+  if (!encoder) {
+    throw new Error(`This device can't encode H.265 video at ${width}x${height}`);
+  }
+
+  return encoder;
+}
+
 // Decodes the IVF stream with the browser's decoder and encodes every frame as H.265 (Annex B) into
-// the output file. The encoder is the device's hardware one: the browser has no software H.265 encoder
+// the output file. The graphics card encodes when it can; the browser has no software H.265 encoder
+// of its own, so the processor only takes over where the browser brings one
 export async function reencodeIvfToHevc({
-  ivfFile, sourceMimeType, spec, output, onProgress, throwIfCancelled
+  ivfFile, sourceMimeType, spec, output, onEngine, onProgress, throwIfCancelled
 }: ReencodeIvfToHevcParams) {
   const { header, frames } = await openIvf(ivfFile);
   const decoderConfig = await buildDecoderConfig({
     sourceMimeType,
     header
   });
+  const { engine, config: encoderConfig } = await chooseEncoder({
+    header,
+    spec
+  });
+  onEngine(engine);
   log.info("H.265 re-encode input", {
     fourcc: header.fourcc,
     width: header.width,
@@ -296,6 +337,7 @@ export async function reencodeIvfToHevc({
   const context: ReencodeContext = {
     spec,
     header,
+    hardwareAcceleration: encoderConfig.hardwareAcceleration,
     encoder,
     decoder,
     pendingFrames,
@@ -326,6 +368,7 @@ export async function reencodeIvfToHevc({
 
   output.flush();
   log.info("H.265 re-encode finished", {
+    engine,
     encodedFrames: progress.encodedFrameCount,
     outputBytes: output.getSize()
   });

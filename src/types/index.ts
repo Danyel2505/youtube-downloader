@@ -40,6 +40,7 @@ export {
   PlaylistOutputMode,
   ProgressStage,
   ProgressType,
+  ReencodeEngine,
   VideoCodecPreference,
   VideoQualityMode,
   VideoReencodeCodec

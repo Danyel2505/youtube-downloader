@@ -1,4 +1,5 @@
 import { resolveWithin } from "@/lib/utils/timeout";
+import { ReencodeEngine } from "@/types";
 import type { Prettify } from "@/types";
 
 const HEVC_CODEC_PREFIX = "hvc1.1.6.L";
@@ -96,11 +97,30 @@ export function buildHevcMimeType(shape: HevcStreamShape): `video/${string}` {
   return `${HEVC_MIME_TYPE_PREFIX}${buildHevcCodecString(shape)}${HEVC_MIME_TYPE_SUFFIX}`;
 }
 
-type HevcVideoEncoderConfig = VideoEncoderConfig & {
+export type HevcVideoEncoderConfig = VideoEncoderConfig & {
   hevc: { format: typeof HEVC_ANNEXB_FORMAT };
 };
 
-export function buildHevcEncoderConfig({ bitrate, ...shape }: HevcStreamShape & { bitrate: number }) {
+// Graphics card first, then a software encoder, for the browsers that have one: Chrome has none
+const HEVC_ENGINES = [
+  {
+    engine: ReencodeEngine.Gpu,
+    hardwareAcceleration: "prefer-hardware"
+  },
+  {
+    engine: ReencodeEngine.Cpu,
+    hardwareAcceleration: "prefer-software"
+  }
+] as const satisfies readonly {
+  engine: ReencodeEngine;
+  hardwareAcceleration: HardwareAcceleration;
+}[];
+
+type HevcEncoderConfigParams = Prettify<HevcStreamShape & {
+  bitrate: number;
+  hardwareAcceleration?: HardwareAcceleration;
+}>;
+export function buildHevcEncoderConfig({ bitrate, hardwareAcceleration, ...shape }: HevcEncoderConfigParams) {
   const config: HevcVideoEncoderConfig = {
     codec: buildHevcCodecString(shape),
     width: shape.width,
@@ -111,7 +131,10 @@ export function buildHevcEncoderConfig({ bitrate, ...shape }: HevcStreamShape & 
     latencyMode: "quality",
     hevc: {
       format: HEVC_ANNEXB_FORMAT
-    }
+    },
+    ...(hardwareAcceleration && {
+      hardwareAcceleration
+    })
   };
   return config;
 }
@@ -129,6 +152,19 @@ export async function isHevcEncoderConfigSupported(config: HevcVideoEncoderConfi
   }
 }
 
+// The first encoder the browser reports as able to take the stream, and which processor it runs on
+export async function resolveHevcEncoder(config: HevcVideoEncoderConfig) {
+  const candidates = HEVC_ENGINES.map(({ engine, hardwareAcceleration }) => ({
+    engine,
+    config: {
+      ...config,
+      hardwareAcceleration
+    }
+  }));
+  const support = await Promise.all(candidates.map(candidate => isHevcEncoderConfigSupported(candidate.config)));
+  return candidates.find((_, i) => support[i]) ?? null;
+}
+
 function toEvenDimension(value: number) {
   return Math.round(value / EVEN_DIMENSION_STEP) * EVEN_DIMENSION_STEP;
 }
@@ -139,7 +175,7 @@ export async function detectHevcEncodeMaxHeight() {
   const probes = Promise.all(
     PROBE_HEIGHTS.map(async height => {
       const width = toEvenDimension(height * PROBE_ASPECT_RATIO);
-      const isSupported = await isHevcEncoderConfigSupported(
+      const encoder = await resolveHevcEncoder(
         buildHevcEncoderConfig({
           width,
           height,
@@ -147,7 +183,7 @@ export async function detectHevcEncodeMaxHeight() {
           bitrate: width * height * PROBE_FRAME_RATE * PROBE_BITS_PER_PIXEL
         })
       );
-      return isSupported ? height : 0;
+      return encoder ? height : 0;
     })
   );
   const supportedHeights = await resolveWithin({

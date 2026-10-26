@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createFooterState, PrimaryButtonState } from "./DownloadOptionsPanelFooter.svelte.ts";
   import { t } from "@/lib/i18n/i18n.svelte.ts";
+  import type { describeConversion } from "@/lib/youtube/progress-label";
   import type { DownloadType, ProgressStage, ProgressType } from "@/types";
   import { attachViewButton } from "#youtube/lib/ui/panel-button-attachments.svelte";
 
@@ -9,6 +10,7 @@
     displayProgress: number;
     progressType: ProgressType | "";
     stage?: ProgressStage;
+    conversion: ReturnType<typeof describeConversion>;
     downloadType?: DownloadType;
     scopingClass: string;
     primaryButtonId: string;
@@ -19,7 +21,7 @@
   }
 
   const {
-    primaryState, displayProgress, progressType, stage, downloadType, scopingClass,
+    primaryState, displayProgress, progressType, stage, conversion, downloadType, scopingClass,
     primaryButtonId, viewButtonId, getIsDownloadable, getIsFilenameValid,
     estimatedSizeLabel
   }: Props = $props();
@@ -40,6 +42,9 @@
     },
     get stage() {
       return stage;
+    },
+    get conversion() {
+      return conversion;
     },
     get downloadType() {
       return downloadType;
@@ -93,6 +98,13 @@
       <span class="ytdl-progress-label" role="alert">{t("Download failed")}</span>
     {:else}
       <span class="ytdl-progress-label" aria-live="polite">{footer.downloadingLabel}</span>
+      {#if conversion}
+        <tp-yt-paper-progress
+          class="ytdl-progress-track"
+          value={Math.round(conversion.fraction * 100)}
+        ></tp-yt-paper-progress>
+        <span class="ytdl-progress-label" aria-live="polite">{footer.conversionLabel}</span>
+      {/if}
     {/if}
   </div>
 </div>

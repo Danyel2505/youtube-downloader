@@ -509,7 +509,7 @@ export function resolveAudioCodec({ audioMimeType, targetExtension }: {
 }
 
 // MP4/MKV copy in video they don't list natively; other containers would switch to MKV
-function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
+export function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
   videoMimeType: string;
   targetExtension: string;
 }) {
@@ -519,21 +519,6 @@ function isVideoAllowedInContainer({ videoMimeType, targetExtension }: {
   }
 
   return videoCodecsFor(containerSpec).has(extractBaseCodec(videoMimeType)) || !!containerSpec.allowNonNativeVideo;
-}
-
-const FALLBACK_CONTAINER = "mkv";
-
-// A video the chosen container can't hold is saved as MKV instead, so a codec picked by hand
-// keeps working under MOV or WebM rather than being swapped for another one
-export function resolveContainerForVideo({ videoMimeType, userExtension }: {
-  videoMimeType: string;
-  userExtension: string;
-}) {
-  const isHeld = isVideoAllowedInContainer({
-    videoMimeType,
-    targetExtension: userExtension
-  });
-  return isHeld ? userExtension : FALLBACK_CONTAINER;
 }
 
 const HVC1_TAGGED_EXTENSIONS = new Set(["mp4", "mov", "m4v"]);
@@ -567,7 +552,7 @@ export function getOutputExtension({ videoMimeType, audioMimeType, userExtension
   const audioOk = isAudioNative || isFallbackAudioPresent;
   const isCompatible = videoOk && audioOk;
 
-  return isCompatible ? userExtension : FALLBACK_CONTAINER;
+  return isCompatible ? userExtension : "mkv";
 }
 
 export function isVideoCodecPreferredForContainer({

@@ -5,6 +5,7 @@ import { listChoices } from "@/lib/utils/choices";
 import {
   MaxFrameRate,
   VideoQualityMode,
+  type AdaptiveFormatItem,
   type Options,
   type Prettify,
   type VideoData
@@ -82,16 +83,23 @@ export function selectVideoFormatForQuality({
   }
 
   const variants = resolveVideoFormatVariants(videoData);
-  const preferredVariants = variants.filter(
-    createVideoFormatPreference({
-      videoFormatVariants: variants,
-      targetExtension,
-      codecPreferences: options
-    }).isPreferred
-  );
-  const bestPreferredFormat = candidates.find(candidate => preferredVariants.some(variant =>
-    variant.height === candidate.height && variant.fps === candidate.fps));
-  return bestPreferredFormat ?? candidates[0] ?? null;
+  const preference = createVideoFormatPreference({
+    videoFormatVariants: variants,
+    targetExtension,
+    codecPreferences: options
+  });
+  function findBestCandidate(isWanted: (format: AdaptiveFormatItem) => boolean) {
+    const wantedVariants = variants.filter(isWanted);
+    return candidates.find(candidate => wantedVariants.some(variant =>
+      variant.height === candidate.height && variant.fps === candidate.fps));
+  }
+
+  // "HDR when available" on a video with no HDR still keeps the container's codec, instead of
+  // jumping to a codec the container can't hold (4K VP9 in MOV saved as MKV)
+  return findBestCandidate(preference.isPreferred)
+    ?? findBestCandidate(preference.isCodecPreferred)
+    ?? candidates[0]
+    ?? null;
 }
 
 type SelectVideoFormatForOptionsParams = Prettify<{

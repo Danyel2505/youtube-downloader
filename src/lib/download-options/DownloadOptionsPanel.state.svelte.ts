@@ -26,12 +26,7 @@ import { syncAudioFromFormat } from "./helpers/player-active-tracks.svelte";
 import type { PanelHost } from "./panel-host";
 import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
 import { CONTENT_OPTIONS, interruptedDownloadStore, statusProgressSignal } from "@/lib/ui/synced-stores.svelte";
-import {
-  getCompatibleFilename,
-  isAudioMimeNativeForContainer,
-  resolveAutoExtension,
-  resolveContainerForVideo
-} from "@/lib/utils/containers";
+import { getCompatibleFilename, isAudioMimeNativeForContainer, resolveAutoExtension } from "@/lib/utils/containers";
 import { pinAudioCodecPreferences, pinVideoCodecPreferences } from "@/lib/youtube/align-formats-to-container";
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { predictOutputSize, type SizeInputs } from "@/lib/youtube/output-size";
@@ -146,21 +141,12 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
   });
   let isFilenameValid = $state(true);
 
-  // A codec picked by hand under a container that can't hold it is saved as MKV, not swapped
-  const planExtension = $derived(
-    pinnedVideoFormat
-      ? resolveContainerForVideo({
-        videoMimeType: pinnedVideoFormat.mimeType,
-        userExtension: extension
-      })
-      : extension
-  );
   const actualExtension = $derived(
     resolveActualExtension({
       downloadType,
       selectedVideoFormat,
       selectedAudioFormat,
-      extension: planExtension,
+      extension,
       getVideoData,
       downloadExtras: PANEL_OPTIONS.downloadExtras,
       codecPreferences

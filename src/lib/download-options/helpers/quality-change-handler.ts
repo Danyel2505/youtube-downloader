@@ -5,7 +5,7 @@ import {
   formatAudioCodecLabel,
   formatVideoCodecLabel,
   isAudioMimeNativeForContainer,
-  resolveContainerForVideo
+  isVideoAllowedInContainer
 } from "@/lib/utils/container-specs";
 import {
   alignVideoFormatToExtension,
@@ -68,15 +68,18 @@ type VideoOptionsParams = Prettify<{
 
 type FormatCondition<Params> = (format: AdaptiveFormatItem, params: Params) => boolean;
 
-// The plan downloads exactly this variant once it's picked by hand, in MKV when the chosen
-// container can't hold it
+// The container holds the stream as-is instead of the download switching to MKV
+function isVideoHeldByContainer(format: AdaptiveFormatItem, { targetExtension }: VideoOptionsParams) {
+  return isVideoAllowedInContainer({
+    videoMimeType: format.mimeType,
+    targetExtension
+  });
+}
+
+// The plan downloads exactly this variant once it's picked by hand
 function isVideoKeptByPlan(format: AdaptiveFormatItem, params: VideoOptionsParams) {
   return alignVideoFormatToExtension({
     ...params,
-    targetExtension: resolveContainerForVideo({
-      videoMimeType: format.mimeType,
-      userExtension: params.targetExtension
-    }),
     currentFormat: format,
     codecPreferences: pinVideoCodecPreferences({
       codecPreferences: params.codecPreferences,
@@ -87,10 +90,8 @@ function isVideoKeptByPlan(format: AdaptiveFormatItem, params: VideoOptionsParam
 
 // A codec variant is offered only when it meets every condition. The variants are what YouTube
 // serves for this video, which already carries per-codec limits (H.264 stops at 1080p except on
-// 360° videos, HDR only on HDR uploads, AV1 only on some); further rules go in this list.
-// A codec the container can't hold stays offered when the plan keeps it: picking it switches the
-// download to MKV, which the panel says, instead of the codec vanishing from the menu
-const VIDEO_FORMAT_CONDITIONS: FormatCondition<VideoOptionsParams>[] = [isVideoKeptByPlan];
+// 360° videos, HDR only on HDR uploads, AV1 only on some); further rules go in this list
+const VIDEO_FORMAT_CONDITIONS: FormatCondition<VideoOptionsParams>[] = [isVideoHeldByContainer, isVideoKeptByPlan];
 
 function listOfferedVideoFormats(params: VideoOptionsParams) {
   return params.videoFormatVariants.filter(format =>

@@ -9,16 +9,12 @@ import {
 import { createOpfsOutputFs } from "./opfs-output-fs";
 import { reencodeIvfToHevc } from "./reencode-hevc";
 import { OPFS_REENCODE_HEVC_SUFFIX, OPFS_REENCODE_IVF_SUFFIX } from "@/lib/download-pipeline/opfs-constants";
+import { DEMUX_PROGRESS_SHARE, ENCODE_PROGRESS_SHARE, REENCODE_STAGE_BY_ENGINE } from "@/lib/youtube/download-progress";
 import { ProgressStage } from "@/types";
 import type { Prettify, VideoReencodeSpec } from "@/types";
 
 const IVF_OUTPUT_FILENAME = "video.ivf";
 const IVF_MOUNT_SUFFIX = "-ivf-out";
-const DEMUX_PROGRESS_SHARE = 0.04;
-const ENCODE_PROGRESS_SHARE = 0.86;
-
-export const REENCODE_PROGRESS_SHARE = DEMUX_PROGRESS_SHARE + ENCODE_PROGRESS_SHARE;
-
 type ExecIvfDemuxParams = Prettify<{
   sourceFilename: string;
   mountDirectory: string;
@@ -115,14 +111,16 @@ export async function reencodeVideo({ videoId, sourceFilename, sourceMimeType, s
   const root = await navigator.storage.getDirectory();
   const hevcHandle = await root.getFileHandle(`${videoId}${OPFS_REENCODE_HEVC_SUFFIX}`, { create: true });
   const syncHandle = await hevcHandle.createSyncAccessHandle();
-  state.progressStage = ProgressStage.Reencoding;
-  reportFFmpegProgress(DEMUX_PROGRESS_SHARE);
   try {
     await reencodeIvfToHevc({
       ivfFile,
       sourceMimeType,
       spec,
       output: syncHandle,
+      onEngine(engine) {
+        state.progressStage = REENCODE_STAGE_BY_ENGINE[engine];
+        reportFFmpegProgress(DEMUX_PROGRESS_SHARE);
+      },
       onProgress: fraction => reportFFmpegProgress(DEMUX_PROGRESS_SHARE + fraction * ENCODE_PROGRESS_SHARE),
       throwIfCancelled: () => throwIfMuxCancelled(videoId)
     });

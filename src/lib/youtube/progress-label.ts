@@ -1,13 +1,25 @@
 import type { MessageKey } from "@/lib/i18n/es-419";
 import { getLocale, t } from "@/lib/i18n/i18n.svelte.ts";
-import { DownloadType, ProgressStage, ProgressType } from "@/types";
+import { calculateConversionProgress } from "@/lib/youtube/download-progress";
+import { DownloadType, ProgressStage, ProgressType, ReencodeEngine } from "@/types";
 
 const STAGE_LABEL_KEYS = {
   [ProgressStage.Extracting]: "Preparing video for H.265",
-  [ProgressStage.Reencoding]: "Converting video to H.265",
+  [ProgressStage.ReencodingGpu]: "Converting video to H.265 (GPU)",
+  [ProgressStage.ReencodingCpu]: "Converting video to H.265 (CPU)",
   [ProgressStage.Merging]: "Merging video and audio",
   [ProgressStage.Saving]: "Saving the file"
 } as const satisfies Record<ProgressStage, MessageKey>;
+
+const ENGINE_BY_STAGE: Partial<Record<ProgressStage, ReencodeEngine>> = {
+  [ProgressStage.ReencodingGpu]: ReencodeEngine.Gpu,
+  [ProgressStage.ReencodingCpu]: ReencodeEngine.Cpu
+};
+
+const ENGINE_LABEL_KEYS = {
+  [ReencodeEngine.Gpu]: "GPU",
+  [ReencodeEngine.Cpu]: "CPU"
+} as const satisfies Record<ReencodeEngine, MessageKey>;
 
 const DOWNLOAD_LABEL_KEYS = {
   [DownloadType.VideoAndAudio]: "Downloading video and audio",
@@ -58,4 +70,26 @@ export function describeActivity({ progressType, stage, progress, downloadType }
   }
 
   return t(DOWNLOAD_LABEL_KEYS[downloadType ?? DownloadType.Auto]);
+}
+
+type DescribeConversionParams = {
+  stage: ProgressStage | undefined;
+  progress: number;
+};
+// The second progress indicator: the H.265 conversion on its own, and the processor doing it
+export function describeConversion({ stage, progress }: DescribeConversionParams) {
+  const fraction = calculateConversionProgress({
+    stage,
+    progress
+  });
+  if (fraction === null) {
+    return null;
+  }
+
+  const engine = stage && ENGINE_BY_STAGE[stage];
+  return {
+    fraction,
+    label: t("H.265 conversion"),
+    processor: engine ? t(ENGINE_LABEL_KEYS[engine]) : ""
+  };
 }

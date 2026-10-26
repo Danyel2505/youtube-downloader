@@ -1,6 +1,6 @@
 import { executeMuxPhases, tryCheckOutput } from "./mux-handler-exec";
 import { cleanupMuxFiles, writeMuxInputFiles } from "./mux-handler-files";
-import { reencodeVideo, REENCODE_PROGRESS_SHARE, removeReencodeFiles } from "./mux-handler-reencode";
+import { reencodeVideo, removeReencodeFiles } from "./mux-handler-reencode";
 import {
   postFileResult,
   reportFFmpegProgress,
@@ -17,6 +17,7 @@ import {
   resolveMultiTrackExtension
 } from "@/lib/utils/containers";
 import { createLogger, LogScope } from "@/lib/utils/logger";
+import { REENCODE_PROGRESS_SHARE } from "@/lib/youtube/download-progress";
 import { ProgressStage } from "@/types";
 
 const log = createLogger(LogScope.Ffmpeg);
