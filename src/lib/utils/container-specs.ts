@@ -36,8 +36,6 @@ type ContainerSpec = Prettify<{
   audioCodecs: Set<string>;
   fallbackAudioCodec?: string;
   fallbackVideoCodec?: string;
-  // Picked over other codecs for video downloads, even at a lower bitrate (issue #21)
-  preferredVideoCodecs?: Set<string>;
   preferredAudioCodecs?: Set<string>;
   allowNonNativeVideo?: boolean;
   subtitleCodec?: string;
@@ -66,7 +64,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     videoCodecs: new Set([CODEC_VP8, CODEC_VP9, CODEC_VP09, CODEC_AV01]),
     audioCodecs: new Set([CODEC_OPUS, CODEC_VORBIS]),
     fallbackVideoCodec: CODEC_VP9_ENCODER,
-    preferredVideoCodecs: PREFER_VP9,
     preferredAudioCodecs: PREFER_OPUS,
     subtitleCodec: SUBTITLE_CODEC_WEBVTT
   },
@@ -75,7 +72,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     audioCodecs: new Set([CODEC_MP4A, CODEC_AC3, CODEC_EC3, CODEC_FLAC]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
-    preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC,
     allowNonNativeVideo: true,
     subtitleCodec: SUBTITLE_CODEC_MOV_TEXT
@@ -85,7 +81,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     audioCodecs: new Set([CODEC_MP4A, CODEC_AC3, CODEC_EC3, CODEC_FLAC]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
-    preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC,
     subtitleCodec: SUBTITLE_CODEC_MOV_TEXT
   },
@@ -93,15 +88,13 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     videoCodecs: new Set([CODEC_AVC1, CODEC_MP4V]),
     audioCodecs: new Set([CODEC_AC3]),
     fallbackAudioCodec: CODEC_MP3_ENCODER,
-    fallbackVideoCodec: CODEC_MPEG4_ENCODER,
-    preferredVideoCodecs: PREFER_H264
+    fallbackVideoCodec: CODEC_MPEG4_ENCODER
   },
   m4v: {
     videoCodecs: new Set([CODEC_AVC1, CODEC_HVC1, CODEC_HEV1, CODEC_AV01, CODEC_MP4V]),
     audioCodecs: new Set([CODEC_MP4A, CODEC_AC3, CODEC_EC3, CODEC_FLAC]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
-    preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC,
     allowNonNativeVideo: true,
     subtitleCodec: SUBTITLE_CODEC_MOV_TEXT
@@ -111,7 +104,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     audioCodecs: new Set([CODEC_MP4A]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
-    preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC
   },
   ts: {
@@ -119,7 +111,6 @@ export const CONTAINER_SPECS: Record<string, ContainerSpec> = {
     audioCodecs: new Set([CODEC_MP4A, CODEC_AC3, CODEC_EC3, CODEC_MP3]),
     fallbackAudioCodec: CODEC_AAC,
     fallbackVideoCodec: CODEC_H264_ENCODER,
-    preferredVideoCodecs: PREFER_H264,
     preferredAudioCodecs: PREFER_AAC
   },
   mkv: {
@@ -406,8 +397,20 @@ export function isAudioMimeNativeForContainer({ audioMimeType, targetExtension }
   return spec.audioCodecs.has(extractBaseCodec(audioMimeType));
 }
 
+// Newer codecs look better at the same resolution; H.265 only comes as a re-encode of these
+const VIDEO_CODEC_QUALITY_RANK: Record<string, number> = {
+  [CODEC_AV01]: 3,
+  [CODEC_VP9]: 2,
+  [CODEC_VP09]: 2,
+  [CODEC_AVC1]: 1
+};
+
+export function getVideoCodecQualityRank(videoMimeType: string) {
+  return VIDEO_CODEC_QUALITY_RANK[extractBaseCodec(videoMimeType)] ?? 0;
+}
+
 // A codec setting wins when the video offers that codec and the container holds it as-is;
-// otherwise, and on Auto, the container's own preference applies (issue #21)
+// otherwise, and on Auto, any codec the container holds does and quality ranks them
 type UsableCodecsParams = Prettify<{
   userCodecs: Set<string> | null;
   containerCodecs: Set<string> | undefined;
@@ -567,7 +570,7 @@ export function isVideoCodecPreferredForContainer({
   const preferredVideoCodecs = pickPreferredCodecs({
     userCodecs: VIDEO_CODEC_PREFERENCES[codecPreferences.videoCodec].codecs,
     containerCodecs: containerSpec?.videoCodecs,
-    containerPreferredCodecs: containerSpec?.preferredVideoCodecs,
+    containerPreferredCodecs: containerSpec?.videoCodecs,
     offeredMimeTypes
   });
   return preferredVideoCodecs?.has(extractBaseCodec(videoMimeType)) ?? false;

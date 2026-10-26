@@ -3,6 +3,7 @@ import { appendReencodedVariants } from "./reencode-formats";
 import { alignAudioFormatToExtension, pickBestByBitrate } from "./select-audio-format";
 import {
   getOutputExtension,
+  getVideoCodecQualityRank,
   isDynamicRangePreferred,
   resolveAudioCodecPreference,
   resolveDynamicRangePreference,
@@ -96,6 +97,20 @@ export function createVideoFormatPreference({
   };
 }
 
+// Same resolution, so the stream YouTube serves comes first, then the better codec, then more bitrate
+function pickBestVideoQuality(formats: AdaptiveFormatItem[]) {
+  return formats.reduce<AdaptiveFormatItem | null>((best, format) => {
+    if (!best) {
+      return format;
+    }
+
+    const nativeGain = Number(!format.reencode) - Number(!best.reencode);
+    const codecGain = getVideoCodecQualityRank(format.mimeType) - getVideoCodecQualityRank(best.mimeType);
+    const gain = nativeGain || codecGain || format.bitrate - best.bitrate;
+    return gain > 0 ? format : best;
+  }, null);
+}
+
 type AlignVideoFormatToExtensionParams = Prettify<CreateVideoFormatPreferenceParams & {
   currentFormat: AdaptiveFormatItem;
 }>;
@@ -110,16 +125,12 @@ export function alignVideoFormatToExtension({
     targetExtension,
     codecPreferences
   });
-  if (preference.isCodecAndRangePreferred(currentFormat)) {
-    return currentFormat;
-  }
-
   const siblings = videoFormatVariants.filter(format =>
     format.height === currentFormat.height
     && format.fps === currentFormat.fps
     && isPremiumFormat(format) === isPremiumFormat(currentFormat));
   const sameCodecSiblings = siblings.filter(format => isSameVideoCodec(format.mimeType, currentFormat.mimeType));
-  return pickBestByBitrate(siblings.filter(preference.isCodecAndRangePreferred))
+  return pickBestVideoQuality(siblings.filter(preference.isCodecAndRangePreferred))
     ?? pickBestByBitrate(siblings.filter(preference.isWantedHdr))
     ?? pickBestByBitrate(sameCodecSiblings.filter(preference.isRangePreferred))
     ?? pickBestByBitrate(siblings.filter(preference.isCodecPreferred))

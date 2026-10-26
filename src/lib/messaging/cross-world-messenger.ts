@@ -41,7 +41,6 @@ export const CrossWorldMessage = {
   OpenSnackbar: "openSnackbar",
   SetSettingsOptionsData: "setSettingsOptionsData",
   ButtonClick: "buttonClick",
-  DownloadBlobUrl: "downloadBlobUrl",
   ReportPageProgress: "reportPageProgress",
   ReportMainDownloadFailed: "reportMainDownloadFailed",
   MeasureSizeInputs: "measureSizeInputs",
@@ -130,11 +129,6 @@ export interface PageMessengerSchema {
     title: string;
   }): void;
   [CrossWorldMessage.ButtonClick](data: { buttonId: string }): void;
-  [CrossWorldMessage.DownloadBlobUrl](data: {
-    blobUrl: string;
-    filename: string;
-    videoId: string;
-  }): void;
   [CrossWorldMessage.ReportPageProgress](data: {
     videoId: string;
     progress: number;

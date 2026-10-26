@@ -18,7 +18,6 @@ export type ResolvedDownloadData = Prettify<{
   resolvedVideoUrl: string | null;
   resolvedAudioUrl: string | null;
   resolvedExtraAudioUrls: (string | null)[];
-  progressiveUrl: string | null;
 }>;
 
 // Single-track videos don't carry the `audioTrack.id` on the adaptive format
@@ -98,7 +97,7 @@ export async function buildEnrichedRequest({ params, resolved }: BuildEnrichedRe
   const {
     sabrConfig, poToken, sabrUrl, videoFormat, videoReencode, audioFormat, extraAudioFormats,
     orderedCaptionTracks, sourceCaptionTracks, captionVttDataPromise,
-    resolvedVideoUrl, resolvedAudioUrl, resolvedExtraAudioUrls, progressiveUrl
+    resolvedVideoUrl, resolvedAudioUrl, resolvedExtraAudioUrls
   } = resolved;
   const metadata = await buildVideoMetadata(videoId);
   const primaryAudioLanguageCode = resolvePrimaryAudioLanguageCode({
@@ -131,7 +130,6 @@ export async function buildEnrichedRequest({ params, resolved }: BuildEnrichedRe
     resolvedVideoUrl,
     resolvedAudioUrl,
     resolvedExtraAudioUrls,
-    progressiveUrl,
     playlistId,
     playlistTitle,
     playlistTotalCount,

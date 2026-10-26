@@ -39,7 +39,6 @@ export const MessageType = {
   PipelineZipProgress: "pipelineZipProgress",
   WatchDownloadCompleted: "watchDownloadCompleted",
   RevealDownloadFile: "revealDownloadFile",
-  DownloadBlobUrl: "downloadBlobUrl",
   RequestDirectUrlDownload: "requestDirectUrlDownload",
   RequestWatchPageFallback: "requestWatchPageFallback",
   WorkerDownloadComplete: "workerDownloadComplete",
@@ -274,12 +273,6 @@ export interface ProtocolMap {
   }): void;
   revealDownloadFile(data: {
     downloadId: number;
-  }): void;
-
-  downloadBlobUrl(data: {
-    blobUrl: string;
-    filename: string;
-    videoId: string;
   }): void;
 
   requestDirectUrlDownload(data: {

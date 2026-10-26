@@ -4,23 +4,10 @@ import { isVideoDownloadable, isVideoLive, isVideoMusic } from "@/lib/youtube/vi
 import type { PlayerResponse, Prettify } from "@/types";
 import type { PlayerText } from "@/types/youtube";
 
-const PROGRESSIVE_ITAG_PRIORITY = [22, 18] as const;
 const YT_INITIAL_PLAYER_RESPONSE_PATTERN = /var ytInitialPlayerResponse\s*=\s*(.+?);\s*(?:var\s|<\/script>)/s;
 
 function readPlayerText({ simpleText, runs }: PlayerText) {
   return simpleText ?? runs?.map(run => run.text).join("") ?? "";
-}
-
-function extractProgressiveUrl(playerResponse: PlayerResponse) {
-  const formats = playerResponse.streamingData?.formats ?? [];
-  for (const itag of PROGRESSIVE_ITAG_PRIORITY) {
-    const format = formats.find(formatItem => formatItem.itag === itag && formatItem.url);
-    if (format?.url) {
-      return format.url;
-    }
-  }
-
-  return null;
 }
 
 type VideoDataParams = Prettify<{
@@ -84,8 +71,7 @@ export function buildVideoData({ playerResponse, clientVersion, clientName }: Vi
       playerResponse,
       clientVersion,
       clientName
-    }),
-    progressiveUrl: extractProgressiveUrl(playerResponse)
+    })
   };
 }
 

@@ -8,6 +8,7 @@ patchedDependencies:
   '@davestewart/wxt-utils@0.6.0': 0ef8576660b1d40a79c7b1d2516ff5869de7d67c22ba6d28c902dddca44978be
   '@ffmpeg/core@0.12.0': 90c99ecf9fd362a2b316a0004ae20efd8578e7cce1f9225351822ec66b899e88
   '@ffmpeg/core@0.12.10': 17eaefe31961a48826d933bec45e3bc15a8ab5c388a7d38a48472597cbd58a0f
+  '@webext-core/messaging@4.0.0': d7254593269cdc9c544698efa588f968f0c3e4bd104c271046ec4af743755cd6
   lie@3.3.0: 48a0599fa861ead1630c2f7fd2d4f75bc0a8fb202b8cab55499ef75248e1584e
 
 importers:
@@ -28,7 +29,7 @@ importers:
         version: 0.12.2
       '@webext-core/messaging':
         specifier: ^4.0.0
-        version: 4.0.0
+        version: 4.0.0(patch_hash=d7254593269cdc9c544698efa588f968f0c3e4bd104c271046ec4af743755cd6)
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
@@ -4533,7 +4534,7 @@ snapshots:
 
   '@webext-core/match-patterns@2.0.0': {}
 
-  '@webext-core/messaging@4.0.0':
+  '@webext-core/messaging@4.0.0(patch_hash=d7254593269cdc9c544698efa588f968f0c3e4bd104c271046ec4af743755cd6)':
     dependencies:
       '@aklinker1/zero-serialize-error': 1.0.2
 

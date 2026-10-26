@@ -4,15 +4,12 @@ import { getPageRoute, getRouteVideoId, PageRoute } from "./page-route";
 import { generatePoTokenIfNeeded, videoDataCache } from "./video-data";
 import { crossWorldMessenger, CrossWorldMessage } from "@/lib/messaging/cross-world-messenger";
 import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
-import { getCompatibleFilename, getFileExtension, splitFilenameAndExtension } from "@/lib/utils/filename";
-import { createLogger, LogScope } from "@/lib/utils/logger";
+import { getFileExtension } from "@/lib/utils/filename";
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { CAPTION_ESTIMATED_BYTES } from "@/lib/youtube/download-progress";
 import { resolveReencodeSource } from "@/lib/youtube/reencode-formats";
 import { isVideoDataExpired } from "@/lib/youtube/video-helpers";
 import type { AdaptiveFormatItem, DownloadRequest, Prettify, VideoData } from "@/types";
-
-const log = createLogger(LogScope.Main);
 
 function readContentLength(format: AdaptiveFormatItem | null) {
   if (!format?.contentLength) {
@@ -21,36 +18,6 @@ function readContentLength(format: AdaptiveFormatItem | null) {
 
   const bytes = Number(format.contentLength);
   return Number.isFinite(bytes) && bytes > 0 ? bytes : 0;
-}
-
-const PROGRESSIVE_DOWNLOAD_EXTENSION = "mp4";
-
-type TryProgressiveInPageParams = Prettify<{
-  url: string;
-  filenameOutput: string;
-  videoId: string;
-}>;
-async function tryProgressiveInPage({ url, filenameOutput, videoId }: TryProgressiveInPageParams) {
-  try {
-    const response = await fetch(url, { credentials: "include" });
-    if (!response.ok) {
-      log.warn("Progressive fetch status:", response.status);
-      return false;
-    }
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const { name } = splitFilenameAndExtension(filenameOutput);
-    await crossWorldMessenger.sendMessage(CrossWorldMessage.DownloadBlobUrl, {
-      blobUrl,
-      filename: getCompatibleFilename(`${name}.${PROGRESSIVE_DOWNLOAD_EXTENSION}`),
-      videoId
-    });
-    return true;
-  } catch (error) {
-    log.warn("Progressive fetch failed:", error);
-    return false;
-  }
 }
 
 export type DownloadParams = Prettify<Pick<DownloadRequest,
@@ -151,20 +118,6 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
 
   const sabrUrl = credentials.sabrUrl ?? null;
 
-  const canTryProgressiveInPage = !resolvedVideoUrl
-    && !resolvedAudioUrl
-    && !!cachedVideoData.progressiveUrl;
-  if (canTryProgressiveInPage) {
-    const didStart = await tryProgressiveInPage({
-      url: cachedVideoData.progressiveUrl!,
-      filenameOutput: params.filenameOutput,
-      videoId
-    });
-    if (didStart) {
-      return;
-    }
-  }
-
   const enrichedRequest = await buildEnrichedRequest({
     params,
     resolved: {
@@ -180,8 +133,7 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
       captionVttDataPromise,
       resolvedVideoUrl,
       resolvedAudioUrl,
-      resolvedExtraAudioUrls,
-      progressiveUrl: cachedVideoData.progressiveUrl
+      resolvedExtraAudioUrls
     }
   });
   if (abortSignal.aborted) {

@@ -3,7 +3,6 @@ import {
   clearInFlightDownload,
   dropPendingRetry,
   handleTerminalFailure,
-  reportDownloadFailed,
   startBackgroundDownload,
   tryAndroidVrFallback
 } from "../download/background-downloader";
@@ -14,7 +13,6 @@ import {
   initIframeReadyListener,
   registerPopupDownloadHandler
 } from "../download/iframe-downloader";
-import { downloadWithFilename } from "../download/named-download";
 import { clearIframeAutoRetry, handleIframeFallback } from "../download/sabr-attempt";
 import { enqueueToPopupList, removeFromPopupList } from "../queue/popup-list";
 import { signalVideoComplete } from "../queue/sequential-queue";
@@ -145,41 +143,6 @@ export function registerDownloadHandlers() {
     clearCurrentSequenceTabId();
     await removeFromPopupList(data.videoIds);
     await cancelDownloads(data.videoIds);
-  });
-
-  onMessage(MessageType.DownloadBlobUrl, async ({ data }) => {
-    const { blobUrl, filename, videoId } = data;
-    const tabId = getTabIdsForVideo(videoId)[0] ?? -1;
-    try {
-      const downloadId = await downloadWithFilename({
-        url: blobUrl,
-        filename,
-        fallbackName: videoId
-      });
-      clearIframeAutoRetry(videoId);
-      trackDownloadCompleteOnce(downloadId);
-      notifyWatchTabsOnComplete({
-        downloadId,
-        videoId,
-        filename
-      });
-
-      await sendMessageToTab(MessageType.UpdateDownloadProgress, {
-        videoId,
-        progress: 0,
-        progressType: ProgressType.Video,
-        isRemoved: true
-      }, tabId);
-
-      await removeFromPopupList(videoId);
-      signalVideoComplete(videoId);
-    } catch (error) {
-      log.warn("Blob URL download failed:", error);
-      await reportDownloadFailed({
-        videoId,
-        tabId
-      });
-    }
   });
 
   onMessage(MessageType.AnnounceDownload, async ({ data, sender }) => {

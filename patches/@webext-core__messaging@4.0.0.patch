@@ -1,0 +1,17 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 76f8b9b97cdd5e8d350b13fd30c4cfaa210fd5d3..96239003a409a7786b27e78ca749867c32d00b7f 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -15,7 +15,11 @@ function defineExtensionMessaging(config) {
+ 				else resolve(response);
+ 			}));
+ 			const options = typeof arg === "number" ? { tabId: arg } : arg;
+-			return new Promise((res) => chrome.tabs.sendMessage(options.tabId, message, options.frameId != null ? { frameId: options.frameId } : void 0, res));
++			return new Promise((res) => chrome.tabs.sendMessage(options.tabId, message, options.frameId != null ? { frameId: options.frameId } : void 0, (response) => {
++				// Reading lastError marks it as handled: a tab without a listener is normal, and an unread one logs "Unchecked runtime.lastError"
++				void chrome.runtime.lastError;
++				res(response);
++			}));
+ 		},
+ 		addRootListener(processMessage) {
+ 			const listener = (message, sender, sendResponse) => {

@@ -57,7 +57,6 @@ export type DownloadRequest = Prettify<{
   resolvedVideoUrl?: string | null;
   resolvedAudioUrl?: string | null;
   resolvedExtraAudioUrls?: (string | null)[];
-  progressiveUrl?: string | null;
   originTabId?: number;
   sourceUrl?: string;
 }>;
@@ -109,5 +108,4 @@ export type VideoData = Prettify<{
   sourceCaptionLanguageCode?: string;
   translationLanguages: TranslationLanguage[];
   sabrConfig: SabrConfig | null;
-  progressiveUrl: string | null;
 }>;

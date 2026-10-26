@@ -33,10 +33,6 @@ export function registerDownloadProgressHandlers() {
     uncancelStreamTransfer(data.videoId);
   });
 
-  crossWorldMessenger.onMessage(CrossWorldMessage.DownloadBlobUrl, ({ data }) => {
-    sendMessage(MessageType.DownloadBlobUrl, data).catch(() => {});
-  });
-
   crossWorldMessenger.onMessage(CrossWorldMessage.AppendLog, ({ data }) => {
     sendMessage(MessageType.AppendLog, data).catch(() => {});
   });
