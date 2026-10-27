@@ -31,7 +31,11 @@ import { pinAudioCodecPreferences, pinVideoCodecPreferences } from "@/lib/youtub
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { predictOutputSize, type SizeInputs } from "@/lib/youtube/output-size";
 import { selectVideoFormatForQuality } from "@/lib/youtube/select-video-quality";
-import { alignAudioFormatToExtension, calculateWeightedProgress } from "@/lib/youtube/video-helpers";
+import {
+  alignAudioFormatToExtension,
+  calculateWeightedProgress,
+  pickBestAudioFormat
+} from "@/lib/youtube/video-helpers";
 import { DownloadType, type AdaptiveFormatItem, type CodecPreferences, type VideoData } from "@/types";
 import { untrack } from "svelte";
 
@@ -409,6 +413,19 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
     });
   });
 
+  // A codec picked by hand downloads at that codec's largest resolution, with the container's best audio
+  function selectVideoCodec(format: AdaptiveFormatItem) {
+    selectedVideoFormat = format;
+    pinnedVideoFormat = format;
+    pinnedAudioFormat = null;
+    selectedAudioFormat = pickBestAudioFormat({
+      audioFormats: getVideoData().audioFormats,
+      currentFormat: selectedAudioFormat,
+      targetExtension: menuExtension,
+      codecPreferences
+    });
+  }
+
   function handleDownloadTypeChange(newType: DownloadType) {
     const result = applyDownloadTypeChange({
       newType,
@@ -542,6 +559,7 @@ export function createPanelState(getVideoData: () => VideoData, host: PanelHost)
     },
     audio,
     caption,
+    selectVideoCodec,
     handleDownloadTypeChange,
     startDownload,
     cancelDownload: () => sendCancelDownload(getVideoData().videoId),

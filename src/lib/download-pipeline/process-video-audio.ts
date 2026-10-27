@@ -16,7 +16,7 @@ import { runMuxVideoAudio } from "./ffmpeg-instance";
 import { OPFS_MUX_OUTPUT_SUFFIX } from "./opfs-constants";
 import { addToPlaylistBundle } from "./playlist-bundle";
 import { createLogger, LogScope } from "@/lib/utils/logger";
-import { ProgressStage, ProgressType } from "@/types";
+import { DownloadType, ProgressStage, ProgressType } from "@/types";
 import type { Prettify, ProcessStreamData } from "@/types";
 
 const log = createLogger(LogScope.Pipeline);
@@ -28,16 +28,46 @@ type ProcessVideoAudioParams = Prettify<{
   item: ProcessStreamData;
   isCancelled: () => boolean;
 }>;
+
+type BuildSoundInputsParams = Prettify<{
+  item: ProcessStreamData;
+  audioData: Uint8Array | null;
+}>;
+// A video-only download carries no sound and no subtitles, so it muxes the video alone into the container
+function buildSoundInputs({ item, audioData }: BuildSoundInputsParams) {
+  if (item.type === DownloadType.Video) {
+    return {
+      subtitleTracks: [],
+      additionalAudioTracks: [],
+      audioTracks: []
+    };
+  }
+
+  const additionalAudioTracks = buildAdditionalAudioTracks(item.additionalAudioStreams);
+  return {
+    subtitleTracks: item.subtitleTracks,
+    additionalAudioTracks,
+    audioTracks: [
+      {
+        data: toOwnedArrayBuffer(audioData!),
+        label: item.primaryAudioLabel ?? "",
+        languageCode: item.primaryAudioLanguageCode ?? ""
+      },
+      ...additionalAudioTracks
+    ]
+  };
+}
+
 export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudioParams) {
   const {
-    videoId, filenameOutput, videoMimeType, videoReencode, audioMimeType, tabId,
-    additionalAudioStreams, subtitleTracks, primaryAudioLanguageCode, defaultAudioTrackIndex
+    videoId, filenameOutput, videoMimeType, videoReencode, audioMimeType, tabId, defaultAudioTrackIndex
   } = item;
 
+  const isVideoOnly = item.type === DownloadType.Video;
   const videoData = item.videoFile ? null : toUint8Array(item.videoData);
   const audioData = toUint8Array(item.audioData);
   const isVideoMissing = !videoData && !item.videoFile;
-  const isMissingStream = isVideoMissing || !audioData;
+  const isMissingStream = isVideoMissing || (!audioData && !isVideoOnly);
   if (isMissingStream) {
     await handleSingleStream({
       item,
@@ -54,15 +84,10 @@ export async function processVideoAudio({ item, isCancelled }: ProcessVideoAudio
     tabId
   });
 
-  const additionalAudioTracks = buildAdditionalAudioTracks(additionalAudioStreams);
-  const audioTracks = [
-    {
-      data: toOwnedArrayBuffer(audioData!),
-      label: item.primaryAudioLabel ?? "",
-      languageCode: primaryAudioLanguageCode ?? ""
-    },
-    ...additionalAudioTracks
-  ];
+  const { subtitleTracks, additionalAudioTracks, audioTracks } = buildSoundInputs({
+    item,
+    audioData
+  });
 
   const downloadFilename = resolveDownloadFilename({
     filenameOutput,

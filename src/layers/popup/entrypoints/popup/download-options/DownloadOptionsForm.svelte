@@ -89,6 +89,17 @@
       onvideoformatchange: format => (panel.selectedVideoFormat = format)
     });
   }
+
+  function changeVideoCodec(valueString: string): void {
+    handleQualityChange({
+      valueString,
+      isAudio: false,
+      audioFormats: props.videoData.audioFormats,
+      videoFormatVariants: options.videoFormatVariants,
+      onaudioformatchange: selectAudioFormat,
+      onvideoformatchange: panel.selectVideoCodec
+    });
+  }
 </script>
 
 <div class="options-form" {@attach revealForm}>
@@ -109,7 +120,7 @@
       <OptionSelect
         choices={options.videoCodecOptions}
         label={t("Video codec")}
-        onchange={valueString => changeQuality(valueString, false)}
+        onchange={changeVideoCodec}
         value={options.videoCodecValue}
       />
     {/if}
@@ -136,6 +147,7 @@
       {#if tracks.isAudioTrackSelectorPresent}
         <OptionSelect
           choices={tracks.audioOptions}
+          isDisabled={tracks.isVideoOnly}
           label={t("Audio language")}
           onchange={tracks.handleAudioChange}
           value={tracks.audioSelectValue}

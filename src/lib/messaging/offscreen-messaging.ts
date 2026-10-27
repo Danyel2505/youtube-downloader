@@ -99,7 +99,7 @@ export interface OffscreenProtocolMap {
   };
 }
 
-export type OffscreenMessage = {
+type OffscreenMessage = {
   [T in OffscreenMessageType]: {
     type: T;
     data: OffscreenProtocolMap[T];
@@ -185,6 +185,9 @@ export function listenForOffscreenMessages(handlers: HandlerMap) {
   function connect() {
     const port = browser.runtime.connect({ name: OFFSCREEN_PORT_NAME });
     port.onDisconnect.addListener(() => {
+      // Reading lastError marks it handled, otherwise a starting worker logs "Receiving end does not exist"
+      // eslint-disable-next-line no-void
+      void browser.runtime.lastError;
       connect();
     });
     port.onMessage.addListener(message => {

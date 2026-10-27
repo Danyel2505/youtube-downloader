@@ -12,6 +12,7 @@ import {
   pinAudioCodecPreferences,
   pinVideoCodecPreferences
 } from "@/lib/youtube/align-formats-to-container";
+import { byQualityDesc } from "@/lib/youtube/format-filters";
 import {
   alignAudioFormatToExtension,
   formatAudioBitrateLabel,
@@ -112,14 +113,12 @@ export function buildVideoQualityOptions(params: VideoOptionsParams) {
   );
 }
 
-// The codecs offered for the quality being downloaded, each with what it's good for
-export function buildVideoCodecOptions({ downloadedFormat, ...params }: VideoOptionsParams & {
-  downloadedFormat: AdaptiveFormatItem;
-}) {
-  const qualityLabel = formatVideoQualityLabel(downloadedFormat);
+// One row per codec the container holds, each with what it's good for; a row's value is that codec's
+// best variant (its largest resolution), so picking a codec downloads it at the highest quality it has
+export function buildVideoCodecOptions(params: VideoOptionsParams) {
   return uniqueChoices(
     listOfferedVideoFormats(params)
-      .filter(format => formatVideoQualityLabel(format) === qualityLabel)
+      .toSorted(byQualityDesc)
       .map(format => ({
         value: format.itag.toString(),
         label: formatVideoCodecLabel(format.mimeType),

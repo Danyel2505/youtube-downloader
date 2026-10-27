@@ -13,6 +13,7 @@ import { PLAYER_ACTIVE_CAPTION } from "./helpers/player-active-tracks.svelte";
 import { preserveAutoVariant } from "./helpers/preserve-auto-variant";
 import { optionsItem } from "@/lib/storage/storage";
 import { CONTENT_OPTIONS } from "@/lib/ui/synced-stores.svelte";
+import { formatVideoCodecLabel } from "@/lib/utils/container-specs";
 import { MULTI_TRACK_UNSUPPORTED_EXTENSIONS } from "@/lib/utils/containers";
 import { alignVideoFormatToExtension, resolveVideoFormatVariants } from "@/lib/youtube/align-formats-to-container";
 import { isAudioTrackInLanguages, normalizeLanguageCode } from "@/lib/youtube/audio-format-helpers";
@@ -188,14 +189,16 @@ export function createDownloadOptionsState(props: () => DownloadOptionsProps) {
   });
 
   const videoCodecOptions = $derived(
-    isAudio || !downloadedVideoFormat
-      ? []
-      : buildVideoCodecOptions({
-        ...videoOptionsParams,
-        downloadedFormat: downloadedVideoFormat
-      })
+    isAudio || !downloadedVideoFormat ? [] : buildVideoCodecOptions(videoOptionsParams)
   );
-  const videoCodecValue = $derived(downloadedVideoFormat?.itag.toString() ?? "");
+  const videoCodecValue = $derived.by(() => {
+    if (!downloadedVideoFormat) {
+      return "";
+    }
+
+    const codecLabel = formatVideoCodecLabel(downloadedVideoFormat.mimeType);
+    return videoCodecOptions.find(option => option.label === codecLabel)?.value ?? "";
+  });
 
   const audioCodecOptions = $derived(
     props().downloadType === DownloadType.VideoAndAudio

@@ -101,7 +101,7 @@ export function createTrackSelectState(props: () => TrackSelectProps) {
   ]);
 
   const audioSummaryText = $derived.by(() => {
-    if (!isAudioTrackSelectorPresent) {
+    if (!isAudioTrackSelectorPresent || isVideoOnly) {
       return null;
     }
 
@@ -159,6 +159,9 @@ export function createTrackSelectState(props: () => TrackSelectProps) {
   return {
     get isAudioOnly() {
       return isAudioOnly;
+    },
+    get isVideoOnly() {
+      return isVideoOnly;
     },
     get isExtensionMultiTrackIncompatible() {
       return isExtensionMultiTrackIncompatible;

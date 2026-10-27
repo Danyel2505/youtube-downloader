@@ -25,8 +25,11 @@ export function initIframeReadyListener() {
   onMessage(MessageType.DownloadIframeReady, ({ data }) => {
     const pending = pendingIframeReady.get(data.videoId);
     if (!pending) {
+      log.warn("Iframe ready for a download that is no longer pending", data.videoId);
       return null;
     }
+
+    log.info("Download iframe ready", data.videoId);
 
     pending.resolve();
     pendingIframeReady.delete(data.videoId);
@@ -76,6 +79,11 @@ type DownloadViaWatchPageParams = Prettify<{
   tabId: number;
 }>;
 export async function downloadViaWatchPage({ data, tabId }: DownloadViaWatchPageParams) {
+  log.info("Download via watch page iframe", {
+    videoId: data.videoId,
+    tabId,
+    type: data.type
+  });
   await enqueueToPopupList({
     videoId: data.videoId,
     type: data.type,

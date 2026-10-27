@@ -3,11 +3,14 @@ import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-wo
 import { performCancelDownload } from "@/lib/ui/cancel-download";
 import { CONTENT_OPTIONS } from "@/lib/ui/synced-stores.svelte";
 import { resolveVideoFilename } from "@/lib/utils/containers";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { resolveDownloadType } from "@/lib/youtube/download-type";
 import { filterVideoFormatsByEnhancedBitrate } from "@/lib/youtube/format-display";
 import type { Prettify, VideoData } from "@/types";
 import { cancelStreamTransfer } from "#youtube/entrypoints/youtube.content/download/stream-transfer";
 import { checkedPlaylistVideos } from "#youtube/lib/ui/playlist-selection.svelte";
+
+const log = createLogger(LogScope.Isolated);
 
 type TriggerDownloadParams = Prettify<{
   videoData: VideoData;
@@ -31,16 +34,24 @@ export function triggerDownload({ videoData, videoId, gridTitle, setLocallyDone 
 
   const videoCandidates = filterVideoFormatsByEnhancedBitrate(videoData.videoFormats, options.enhancedBitrate);
 
+  const videoItag = videoCandidates[0]?.itag ?? 0;
+  const audioItag = videoData.audioFormats[0]?.itag ?? 0;
   setLocallyDone(false);
+  log.info("List download requested", {
+    videoId,
+    type: downloadType,
+    videoItag,
+    audioItag
+  });
   crossWorldMessenger.sendMessage(CrossWorldMessage.DownloadRequest, {
     type: downloadType,
     videoId,
-    videoItag: videoCandidates[0]?.itag ?? 0,
-    audioItag: videoData.audioFormats[0]?.itag ?? 0,
+    videoItag,
+    audioItag,
     filenameOutput,
     downloadExtras: options.downloadExtras,
     includeAutoDubbing: options.includeAutoDubbing
-  }).catch(() => {});
+  }).catch(error => log.warn("List download request failed", videoId, error));
 }
 
 export function cancelDownload(videoId: string) {

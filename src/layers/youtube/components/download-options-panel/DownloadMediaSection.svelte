@@ -25,6 +25,7 @@
     isAudio: boolean;
     ondownloadtypechange: (type: DownloadType) => void;
     onvideoformatchange: (format: AdaptiveFormatItem) => void;
+    onvideocodecchange: (format: AdaptiveFormatItem) => void;
     onaudioformatchange: (format: AdaptiveFormatItem) => void;
   }
 
@@ -42,6 +43,7 @@
     isAudio,
     ondownloadtypechange,
     onvideoformatchange,
+    onvideocodecchange,
     onaudioformatchange
   }: Props = $props();
 </script>
@@ -87,7 +89,7 @@
         audioFormats,
         videoFormatVariants,
         onaudioformatchange,
-        onvideoformatchange
+        onvideoformatchange: onvideocodecchange
       })}
       value={videoCodecValue}
     />

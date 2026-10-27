@@ -36,6 +36,26 @@ export async function downloadAudioOnlyViaSabr(
   });
 }
 
+type DownloadVideoOnlyViaSabrParams = Prettify<{
+  config: SabrConfig;
+  videoFormat: AdaptiveFormatItem;
+  poToken: string;
+  signal: AbortSignal;
+  onChunk?: (chunk: Uint8Array) => void;
+}>;
+export async function downloadVideoOnlyViaSabr(
+  { config, videoFormat, poToken, signal, onChunk }: DownloadVideoOnlyViaSabrParams
+) {
+  return fetchVideoViaSabrStream({
+    sabrConfig: config,
+    videoFormat,
+    fetchFunction: makeFetch({ signal }),
+    poToken,
+    signal,
+    onChunk
+  });
+}
+
 type DownloadVideoAudioViaSabrParams = Prettify<{
   config: SabrConfig;
   videoFormat: AdaptiveFormatItem;

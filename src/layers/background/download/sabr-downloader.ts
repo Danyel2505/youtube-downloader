@@ -1,6 +1,7 @@
 import {
   downloadAudioOnlyViaSabr,
   downloadVideoAudioViaSabr,
+  downloadVideoOnlyViaSabr,
   downloadExtraAudioTracksViaSabr
 } from "./sabr-fetch-helpers";
 import { createProgressAccumulator } from "./sabr-progress";
@@ -8,8 +9,6 @@ import { buildEffectiveSabrConfig } from "./sabr-utils";
 import { sendNetworkChunkToOffscreen, sendStreamFinishedMarker } from "./stream-chunk-transfer";
 import { DownloadType, StreamType } from "@/types";
 import type { DownloadRequest, Prettify } from "@/types";
-
-export { parseContentLength, buildEffectiveSabrConfig } from "./sabr-utils";
 
 type DownloadViaSabrParams = Prettify<{
   request: DownloadRequest;
@@ -21,6 +20,59 @@ type DownloadViaSabrParams = Prettify<{
   onVideoStreamEnd?: (totalChunks: number) => void;
   onAudioStreamEnd?: (totalChunks: number) => void;
 }>;
+type DownloadVideoOnlyParams = Prettify<{
+  request: DownloadRequest;
+  config: NonNullable<ReturnType<typeof buildEffectiveSabrConfig>>;
+  signal: AbortSignal;
+  tabId: number;
+  onProgress?: () => void;
+  onVideoChunk?: (chunk: Uint8Array, iChunk: number) => void;
+  onVideoStreamEnd?: (totalChunks: number) => void;
+}>;
+async function downloadVideoOnly({
+  request, config, signal, tabId, onProgress, onVideoChunk, onVideoStreamEnd
+}: DownloadVideoOnlyParams) {
+  const { videoId, videoFormat, poToken } = request;
+  if (!videoFormat) {
+    return null;
+  }
+
+  const { onVideoBytes } = createProgressAccumulator({
+    videoId,
+    tabId,
+    captionCount: 0,
+    isAudioOnly: false,
+    videoFormat,
+    audioFormat: null,
+    additionalFormats: [],
+    onProgress
+  });
+  let iChunk = 0;
+  const videoResult = await downloadVideoOnlyViaSabr({
+    config,
+    videoFormat,
+    poToken: poToken ?? "",
+    signal,
+    onChunk(chunk) {
+      onVideoBytes(chunk.byteLength);
+      onVideoChunk?.(chunk, iChunk++);
+    }
+  });
+  const isStreamingMode = !!onVideoChunk;
+  if (isStreamingMode) {
+    onVideoStreamEnd?.(iChunk);
+  }
+
+  return {
+    videoData: isStreamingMode ? null : videoResult.data,
+    audioData: null,
+    additionalAudioTracks: [],
+    isPartialVideo: !videoResult.isComplete,
+    isPartialAudio: false,
+    streamedToOffscreen: isStreamingMode
+  };
+}
+
 export async function downloadViaSabr({
   request,
   signal,
@@ -33,13 +85,29 @@ export async function downloadViaSabr({
 }: DownloadViaSabrParams) {
   const { videoId, type, sabrConfig, poToken, sabrUrl, videoFormat, audioFormat, additionalAudioFormats } = request;
   const isAudioOnly = type === DownloadType.Audio;
+  const isVideoOnly = type === DownloadType.Video;
 
   const effectiveConfig = sabrConfig ? buildEffectiveSabrConfig({
     sabrConfig,
     sabrUrl
   }) : null;
-  const isMissingRequiredConfig = !effectiveConfig || !audioFormat;
-  if (isMissingRequiredConfig) {
+  if (!effectiveConfig) {
+    return null;
+  }
+
+  if (isVideoOnly) {
+    return downloadVideoOnly({
+      request,
+      config: effectiveConfig,
+      signal,
+      tabId,
+      onProgress,
+      onVideoChunk: callerOnVideoChunk,
+      onVideoStreamEnd
+    });
+  }
+
+  if (!audioFormat) {
     return null;
   }
 

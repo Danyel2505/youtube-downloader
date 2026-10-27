@@ -5,11 +5,14 @@ import { generatePoTokenIfNeeded, videoDataCache } from "./video-data";
 import { crossWorldMessenger, CrossWorldMessage } from "@/lib/messaging/cross-world-messenger";
 import { initHevcSupport } from "@/lib/ui/hevc-support.svelte";
 import { getFileExtension } from "@/lib/utils/filename";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { resolveDownloadPlan } from "@/lib/youtube/download-plan";
 import { CAPTION_ESTIMATED_BYTES } from "@/lib/youtube/download-progress";
 import { resolveReencodeSource } from "@/lib/youtube/reencode-formats";
 import { isVideoDataExpired } from "@/lib/youtube/video-helpers";
 import type { AdaptiveFormatItem, DownloadRequest, Prettify, VideoData } from "@/types";
+
+const log = createLogger(LogScope.Main);
 
 function readContentLength(format: AdaptiveFormatItem | null) {
   if (!format?.contentLength) {
@@ -64,6 +67,15 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
     !isVideoPageForThisVideo ||
     isVideoDataExpired(cachedVideoData)
   );
+  log.info("Resolving download", {
+    videoId,
+    route,
+    isTopFrame: self === top,
+    hasCachedVideoData: !!cachedVideoData,
+    isVideoPageForThisVideo,
+    shouldUseIframe
+  });
+
   if (shouldUseIframe) {
     await crossWorldMessenger.sendMessage(CrossWorldMessage.DownloadViaIframe, {
       ...params,
@@ -73,6 +85,7 @@ export async function resolveAndDispatch({ params, abortSignal }: ResolveAndDisp
   }
 
   if (!cachedVideoData) {
+    log.warn("No video data cached for the download, nothing dispatched", videoId);
     return;
   }
 

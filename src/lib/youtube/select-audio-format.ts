@@ -136,6 +136,22 @@ export function alignAudioFormatToExtension({
     return currentFormat;
   }
 
+  return pickBestAudioFormat({
+    audioFormats,
+    currentFormat,
+    targetExtension,
+    codecPreferences
+  });
+}
+
+// The highest bitrate in the codec the container prefers, within the language track already picked
+export function pickBestAudioFormat({
+  audioFormats,
+  currentFormat,
+  targetExtension,
+  codecPreferences
+}: AlignAudioFormatToExtensionParams) {
+  const offeredMimeTypes = audioFormats.map(format => format.mimeType);
   const selectedTrackId = currentFormat?.audioTrack?.id;
   const sameTrackCandidates = selectedTrackId
     ? audioFormats.filter(format => format.audioTrack?.id === selectedTrackId)

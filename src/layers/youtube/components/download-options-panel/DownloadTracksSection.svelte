@@ -59,7 +59,7 @@
           <div class="ytdl-track-field">
             <PolymerSelect
               id="tracks-audio-select"
-              disabled={props.isDownloading}
+              disabled={props.isDownloading || tracks.isVideoOnly}
               label={t("Audio language")}
               onchange={tracks.handleAudioChange}
               options={tracks.audioOptions}

@@ -58,14 +58,14 @@ async function processItem(item: ProcessStreamData) {
   });
 
   try {
-    const isVideoAndAudio = type === DownloadType.VideoAndAudio;
-    if (isVideoAndAudio) {
-      await processVideoAudio({
+    const isAudioOnly = type === DownloadType.Audio;
+    if (isAudioOnly) {
+      await processSingleMedia({
         item,
         isCancelled
       });
     } else {
-      await processSingleMedia({
+      await processVideoAudio({
         item,
         isCancelled
       });

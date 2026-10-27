@@ -10,7 +10,7 @@ type CreateProgressAccumulatorParams = Prettify<{
   captionCount: number;
   isAudioOnly: boolean;
   videoFormat: AdaptiveFormatItem | null;
-  audioFormat: AdaptiveFormatItem;
+  audioFormat: AdaptiveFormatItem | null;
   additionalFormats: AdaptiveFormatItem[];
   onProgress?: () => void;
 }>;
@@ -18,12 +18,17 @@ export function createProgressAccumulator({
   videoId, tabId, captionCount, isAudioOnly, videoFormat, audioFormat, additionalFormats, onProgress
 }: CreateProgressAccumulatorParams) {
   const hasVideoStage = !isAudioOnly && !!videoFormat;
-  const audioExpectedBytes = parseContentLength(audioFormat) || estimateBytesFromBitrate(audioFormat);
-  const videoExpectedBytes = hasVideoStage
-    ? (parseContentLength(videoFormat) || estimateFormatBytes({
-      format: videoFormat,
+  const audioExpectedBytes = audioFormat ? parseContentLength(audioFormat) || estimateBytesFromBitrate(audioFormat) : 0;
+  function estimateFromAudioOrBitrate(format: AdaptiveFormatItem) {
+    const estimated = audioFormat ? estimateFormatBytes({
+      format,
       referenceFormat: audioFormat
-    }) || estimateBytesFromBitrate(videoFormat))
+    }) : 0;
+    return estimated || estimateBytesFromBitrate(format);
+  }
+
+  const videoExpectedBytes = hasVideoStage
+    ? (parseContentLength(videoFormat) || estimateFromAudioOrBitrate(videoFormat))
     : 0;
   const extraExpectedBytesArray = additionalFormats.map(format => {
     const known = parseContentLength(format);
@@ -31,10 +36,7 @@ export function createProgressAccumulator({
       return known;
     }
 
-    return estimateFormatBytes({
-      format,
-      referenceFormat: audioFormat
-    }) || estimateBytesFromBitrate(format);
+    return estimateFromAudioOrBitrate(format);
   });
   let videoReceivedBytes = 0;
   let audioReceivedBytes = 0;
@@ -45,7 +47,7 @@ export function createProgressAccumulator({
       hasVideoStage,
       videoReceivedBytes,
       videoExpectedBytes,
-      hasAudioStage: true,
+      hasAudioStage: !!audioFormat,
       audioReceivedBytes,
       audioExpectedBytes,
       extraReceivedBytesArray,

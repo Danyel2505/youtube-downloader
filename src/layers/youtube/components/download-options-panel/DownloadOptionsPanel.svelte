@@ -82,6 +82,7 @@
       onextensionchange={newExtension => (panel.extension = newExtension)}
       onfilenamechange={newFilename => (panel.filename = newFilename)}
       onvalidationchange={isValid => (panel.isFilenameValid = isValid)}
+      onvideocodecchange={panel.selectVideoCodec}
       onvideoformatchange={format => (panel.selectedVideoFormat = format)}
       panelAudioCustomLanguage={panel.audio.panelAudioCustomLanguage}
       panelAudioMode={panel.audio.panelAudioMode}

@@ -19,6 +19,7 @@
     isDownloading: boolean;
     ondownloadtypechange: (type: import("@/types").DownloadType) => void;
     onvideoformatchange: (format: AdaptiveFormatItem) => void;
+    onvideocodecchange: (format: AdaptiveFormatItem) => void;
     onaudioformatchange: (format: AdaptiveFormatItem) => void;
     onaudiomodechange: (mode: PanelTrackMode) => void;
     onaudiocustomchange: (langCode: string) => void;
@@ -34,7 +35,7 @@
     selectedVideoFormat, selectedAudioFormat, selectedCaptionTrack,
     panelAudioMode, panelAudioCustomLanguage, panelCaptionMode,
     filename, extension, actualExtension, menuExtension, codecPreferences, isDownloading,
-    ondownloadtypechange, onvideoformatchange, onaudioformatchange,
+    ondownloadtypechange, onvideoformatchange, onvideocodecchange, onaudioformatchange,
     onaudiomodechange, onaudiocustomchange, oncaptionmodechange,
     oncaptionchange, onfilenamechange, onextensionchange, onvalidationchange
   }: Props = $props();
@@ -69,6 +70,7 @@
     {isDownloading}
     {onaudioformatchange}
     {ondownloadtypechange}
+    {onvideocodecchange}
     {onvideoformatchange}
     qualityOptions={derived.qualityOptions}
     qualityValue={derived.qualityValue}
