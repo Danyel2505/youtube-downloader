@@ -2,7 +2,10 @@ import { cancelDownloadsLocally } from "../download/cancel-actions";
 import { uncancelStreamTransfer } from "../download/stream-transfer";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import { downloadRequestSchema } from "@/lib/youtube/schemas";
+
+const log = createLogger(LogScope.Isolated);
 
 export function registerDownloadProgressHandlers() {
   crossWorldMessenger.onMessage(CrossWorldMessage.CancelDownload, ({ data }) => {
@@ -23,6 +26,7 @@ export function registerDownloadProgressHandlers() {
   });
 
   crossWorldMessenger.onMessage(CrossWorldMessage.IframePlayerReady, async ({ data }) => {
+    log.info("Iframe player ready, asking the background for the download", data.videoId);
     const request = await sendMessage(MessageType.DownloadIframeReady, { videoId: data.videoId });
     if (request) {
       await crossWorldMessenger.sendMessage(CrossWorldMessage.DownloadRequest, request);

@@ -10,6 +10,11 @@ import type { DownloadProgressEntry, InterruptedDownload, Options, VideoData } f
 
 export const CONTENT_OPTIONS = $state<Options>(INITIAL_OPTIONS);
 
+// Messages are structured-cloned, which throws on the reactive proxies that hold the array options
+export function snapshotContentOptions() {
+  return $state.snapshot(CONTENT_OPTIONS);
+}
+
 export function initContentOptions(options: Options) {
   Object.assign(CONTENT_OPTIONS, options);
   setLanguage(options.language);

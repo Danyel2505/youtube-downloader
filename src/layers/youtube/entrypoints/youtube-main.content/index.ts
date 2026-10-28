@@ -11,8 +11,10 @@ import { extractAndDispatchVideoData } from "./video/video-data";
 import { captureLogsFromPage } from "@/lib/logs/log-capture";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import { CONTENT_OPTIONS, initContentOptions } from "@/lib/ui/synced-stores.svelte";
-import { LogScope } from "@/lib/utils/logger";
+import { createLogger, LogScope } from "@/lib/utils/logger";
 import type { PlayerResponse } from "@/types";
+
+const log = createLogger(LogScope.Main);
 
 const YTDL_IFRAME_QUERY_PARAM = "ytdl=1";
 const EVENT_YT_NAVIGATE_FINISH = "yt-navigate-finish";
@@ -99,8 +101,13 @@ export default defineContentScript({
     }
 
     async function initializeOnLoad() {
+      log.info("Page script initializing", {
+        isIframe: self !== top,
+        path: location.pathname
+      });
       const options = await crossWorldMessenger.sendMessage(CrossWorldMessage.RequestOptions);
       initContentOptions(options);
+      log.info("Page script received the options");
       await extractAndDispatchVideoData();
       extractPlaylistMetadata();
       setupAudioTrackWatcher();
@@ -108,11 +115,15 @@ export default defineContentScript({
     }
 
     const isDocumentReady = document.readyState === "complete";
+    function reportInitializationFailure(error: unknown) {
+      log.warn("Page script initialization failed", error);
+    }
+
     if (isDocumentReady) {
-      initializeOnLoad().catch(() => {});
+      initializeOnLoad().catch(reportInitializationFailure);
     } else {
       addEventListener(EVENT_LOAD, () => {
-        initializeOnLoad().catch(() => {});
+        initializeOnLoad().catch(reportInitializationFailure);
       }, { once: true });
     }
   }

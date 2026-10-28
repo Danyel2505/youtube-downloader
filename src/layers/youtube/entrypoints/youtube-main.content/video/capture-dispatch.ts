@@ -166,6 +166,7 @@ export async function buildAndDispatchVideoData({ playerResponse, shortsPageData
   const isIframe = self !== top;
   if (isIframe) {
     getMoviePlayer()?.stopVideo?.();
+    iframeLog.info("Player data ready, notifying the background", videoData.videoId);
     await crossWorldMessenger.sendMessage(CrossWorldMessage.IframePlayerReady, { videoId: videoData.videoId });
     await generatePoTokenIfNeeded(videoData);
     return;

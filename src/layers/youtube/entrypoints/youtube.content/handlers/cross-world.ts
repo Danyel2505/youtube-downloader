@@ -5,7 +5,7 @@ import { mountPanelUi } from "../ui/panel-ui";
 import { registerDownloadProgressHandlers } from "./cross-world-download";
 import { CrossWorldMessage, crossWorldMessenger } from "@/lib/messaging/cross-world-messenger";
 import { MessageType, sendMessage } from "@/lib/messaging/messaging";
-import { CONTENT_OPTIONS } from "@/lib/ui/synced-stores.svelte";
+import { snapshotContentOptions } from "@/lib/ui/synced-stores.svelte";
 import { videoDataSchema } from "@/lib/youtube/schemas";
 import { forwardSabrCredentialsWithRetry } from "#youtube/lib/youtube/sabr/credentials";
 
@@ -60,12 +60,7 @@ export function registerCrossWorldHandlers({ isDownloadIframe, context }: Regist
     ({ data }) => sendMessage(MessageType.BackgroundProxyFetch, data)
   );
 
-  crossWorldMessenger.onMessage(CrossWorldMessage.RequestOptions, () => ({
-    ...CONTENT_OPTIONS,
-    ext: {
-      ...CONTENT_OPTIONS.ext
-    }
-  }));
+  crossWorldMessenger.onMessage(CrossWorldMessage.RequestOptions, snapshotContentOptions);
 
   registerDownloadProgressHandlers();
 }
